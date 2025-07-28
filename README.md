@@ -25,7 +25,7 @@ This project uses Cursor Rules for improved AI coding assistance, with patterns 
 
 Cursor Rules help both AI coding assistants and human developers maintain high code quality standards and follow best practices.
 
-## Integrated MCP Documentation
+## Integrated MCP Documentationuv run server.py
 
 This template includes comprehensive MCP documentation directly in the project:
 
@@ -51,12 +51,14 @@ Having these resources embedded in the project enables AI coding assistants to b
 ### Installation
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/yourusername/mcp-server-python-template.git
    cd mcp-server-python-template
    ```
 
 2. Create a virtual environment and install dependencies:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -72,7 +74,7 @@ The template includes a weather service example that demonstrates how to build M
 python server.py --transport stdio
 
 # Run with SSE transport (for web applications)
-python server.py --transport sse --host 0.0.0.0 --port 8080
+python server.py --transport sse --host 0.0.0.0 --port 7070
 ```
 
 ## Creating Your Own MCP Tools
@@ -80,26 +82,29 @@ python server.py --transport sse --host 0.0.0.0 --port 8080
 To create your own MCP tools:
 
 1. Import the necessary components from `mcp`:
+
    ```python
    from mcp.server.fastmcp import FastMCP
    ```
 
 2. Initialize your MCP server with a namespace:
+
    ```python
    mcp = FastMCP("your-namespace")
    ```
 
 3. Define your tools using the `@mcp.tool()` decorator:
+
    ```python
    @mcp.tool()
    async def your_tool_function(param1: str, param2: int) -> str:
        """
        Your tool description.
-       
+
        Args:
            param1: Description of param1
            param2: Description of param2
-           
+
        Returns:
            The result of your tool
        """
@@ -108,6 +113,7 @@ To create your own MCP tools:
    ```
 
 4. Run your server using the appropriate transport:
+
    ```python
    mcp.run(transport='stdio')  # or set up SSE as shown in server.py
    ```
@@ -146,4 +152,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-

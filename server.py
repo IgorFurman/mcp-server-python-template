@@ -18,13 +18,13 @@ USER_AGENT = "weather-app/1.0"
 
 async def make_nws_request(url: str) -> dict[str, Any] | None:
     """Make a request to the NWS API with proper error handling.
-    
+
     This function handles the HTTP request to the NWS API, setting appropriate
     headers and handling potential errors during the request.
-    
+
     Args:
         url: The complete URL for the NWS API endpoint
-        
+
     Returns:
         A dictionary containing the JSON response if successful, None otherwise
     """
@@ -47,13 +47,13 @@ async def make_nws_request(url: str) -> dict[str, Any] | None:
 
 def format_alert(feature: dict) -> str:
     """Format an alert feature into a readable string.
-    
+
     Extracts relevant information from a weather alert feature and formats it
     into a human-readable string.
-    
+
     Args:
         feature: A dictionary containing a single weather alert feature
-        
+
     Returns:
         A formatted string with key alert information
     """
@@ -72,12 +72,12 @@ Instructions: {props.get('instruction', 'No specific instructions provided')}
 @mcp.tool()
 async def get_alerts(state: str) -> str:
     """Get weather alerts for a US state.
-    
+
     Fetches active weather alerts from the NWS API for a specified US state.
-    
+
     Args:
         state: Two-letter US state code (e.g. CA, NY)
-        
+
     Returns:
         A formatted string containing all active alerts for the state,
         or a message indicating no alerts or an error
@@ -103,14 +103,14 @@ async def get_alerts(state: str) -> str:
 @mcp.tool()
 async def get_forecast(latitude: float, longitude: float) -> str:
     """Get weather forecast for a location.
-    
+
     Fetches the weather forecast from the NWS API for a specified location
     using latitude and longitude coordinates.
-    
+
     Args:
         latitude: Latitude of the location
         longitude: Longitude of the location
-        
+
     Returns:
         A formatted string containing the forecast for the next 5 periods,
         or an error message if the forecast couldn't be retrieved
@@ -150,14 +150,14 @@ Forecast: {period['detailedForecast']}
 
 def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
     """Create a Starlette application that can serve the provided MCP server with SSE.
-    
+
     Sets up a Starlette web application with routes for SSE (Server-Sent Events)
     communication with the MCP server.
-    
+
     Args:
         mcp_server: The MCP server instance to connect
         debug: Whether to enable debug mode for the Starlette app
-        
+
     Returns:
         A configured Starlette application
     """
@@ -166,9 +166,9 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
 
     async def handle_sse(request: Request) -> None:
         """Handler for SSE connections.
-        
+
         Establishes an SSE connection and connects it to the MCP server.
-        
+
         Args:
             request: The incoming HTTP request
         """
@@ -198,19 +198,19 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
 if __name__ == "__main__":
     # Get the underlying MCP server from the FastMCP instance
     mcp_server = mcp._mcp_server  # noqa: WPS437
-    
+
     import argparse
-    
+
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(description='Run MCP server with configurable transport')
     # Allow choosing between stdio and SSE transport modes
-    parser.add_argument('--transport', choices=['stdio', 'sse'], default='stdio', 
+    parser.add_argument('--transport', choices=['stdio', 'sse'], default='stdio',
                         help='Transport mode (stdio or sse)')
     # Host configuration for SSE mode
-    parser.add_argument('--host', default='0.0.0.0', 
+    parser.add_argument('--host', default='0.0.0.0',
                         help='Host to bind to (for SSE mode)')
     # Port configuration for SSE mode
-    parser.add_argument('--port', type=int, default=8080, 
+    parser.add_argument('--port', type=int, default=7070,
                         help='Port to listen on (for SSE mode)')
     args = parser.parse_args()
 
