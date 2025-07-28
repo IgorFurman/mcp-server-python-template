@@ -212,6 +212,9 @@ if __name__ == "__main__":
     # Port configuration for SSE mode
     parser.add_argument('--port', type=int, default=7070,
                         help='Port to listen on (for SSE mode)')
+    # Debug mode configuration
+    parser.add_argument('--debug', action='store_true',
+                        help='Enable debug mode for verbose logging')
     args = parser.parse_args()
 
     # Launch the server with the selected transport mode
@@ -222,6 +225,6 @@ if __name__ == "__main__":
     else:
         # Run with SSE transport (web-based)
         # Create a Starlette app to serve the MCP server
-        starlette_app = create_starlette_app(mcp_server, debug=True)
+        starlette_app = create_starlette_app(mcp_server, debug=args.debug)
         # Start the web server with the configured host and port
-        uvicorn.run(starlette_app, host=args.host, port=args.port)
+        uvicorn.run(starlette_app, host=args.host, port=args.port, log_level="debug" if args.debug else "info")
