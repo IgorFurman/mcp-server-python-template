@@ -72,27 +72,130 @@ class PromptDatabase:
             conn.commit()
     
     def search_prompts(self, query: str, category: Optional[str] = None, 
-                      complexity: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Search prompts using full-text search with filters."""
+                      complexity: Optional[str] = None, min_effectiveness: float = 0.0) -> List[Dict[str, Any]]:
+        """Enhanced search with quality filtering and relevance scoring."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            
+            # Try FTS search first, fallback to LIKE search if FTS fails
+            try:
+                sql = """
+                    SELECT p.*, 
+                           p.effectiveness_score * p.quality_score as relevance_score
+                    FROM prompts p
+                    JOIN prompts_fts fts ON p.rowid = fts.rowid
+                    WHERE prompts_fts MATCH ?
+                """
+                params = [query]
+                
+                if category:
+                    sql += " AND p.category = ?"
+                    params.append(category)
+                
+                if complexity:
+                    sql += " AND p.complexity_level = ?"
+                    params.append(complexity)
+                
+                if min_effectiveness > 0:
+                    sql += " AND p.effectiveness_score >= ?"
+                    params.append(min_effectiveness)
+                
+                sql += " ORDER BY relevance_score DESC, bm25(prompts_fts) LIMIT 10"
+                
+                cursor = conn.execute(sql, params)
+                results = [dict(row) for row in cursor.fetchall()]
+                
+                if results:
+                    return results
+                    
+            except Exception:
+                # FTS failed, use fallback search
+                pass
+            
+            # Fallback search using LIKE
+            sql = """
+                SELECT *, 
+                       effectiveness_score * quality_score as relevance_score
+                FROM prompts 
+                WHERE (content LIKE ? OR title LIKE ? OR domain LIKE ?)
+            """
+            like_query = f"%{query}%"
+            params = [like_query, like_query, like_query]
+            
+            if category:
+                sql += " AND category = ?"
+                params.append(category)
+            
+            if complexity:
+                sql += " AND complexity_level = ?"
+                params.append(complexity)
+            
+            if min_effectiveness > 0:
+                sql += " AND effectiveness_score >= ?"
+                params.append(min_effectiveness)
+            
+            sql += " ORDER BY relevance_score DESC LIMIT 10"
+            
+            cursor = conn.execute(sql, params)
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_similar_prompts(self, prompt_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+        """Find prompts similar to the given prompt."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            
+            # Get the reference prompt
+            cursor = conn.execute("SELECT * FROM prompts WHERE id = ?", (prompt_id,))
+            reference = cursor.fetchone()
+            
+            if not reference:
+                return []
+            
+            # Find similar prompts based on domain and complexity
+            cursor = conn.execute("""
+                SELECT *, 
+                       ABS(effectiveness_score - ?) as effectiveness_diff,
+                       CASE 
+                           WHEN domain = ? THEN 3
+                           WHEN domain LIKE ? THEN 2
+                           ELSE 1
+                       END as domain_similarity
+                FROM prompts 
+                WHERE id != ? 
+                ORDER BY domain_similarity DESC, effectiveness_diff ASC
+                LIMIT ?
+            """, (
+                reference['effectiveness_score'],
+                reference['domain'], 
+                f"{reference['domain'].split('.')[0]}%",
+                prompt_id,
+                limit
+            ))
+            
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_recommendations(self, user_domain: str = None, complexity_preference: str = None) -> List[Dict[str, Any]]:
+        """Get recommended high-quality prompts."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             
             sql = """
-                SELECT p.* FROM prompts p
-                JOIN prompts_fts fts ON p.rowid = fts.rowid
-                WHERE prompts_fts MATCH ?
+                SELECT *, 
+                       (effectiveness_score * 0.6 + quality_score * 0.4) as recommendation_score
+                FROM prompts 
+                WHERE effectiveness_score >= 0.7 AND quality_score >= 0.7
             """
-            params = [query]
+            params = []
             
-            if category:
-                sql += " AND p.category = ?"
-                params.append(category)
+            if user_domain:
+                sql += " AND domain LIKE ?"
+                params.append(f"%{user_domain}%")
             
-            if complexity:
-                sql += " AND p.complexity_level = ?"
-                params.append(complexity)
+            if complexity_preference:
+                sql += " AND complexity_level = ?"
+                params.append(complexity_preference)
             
-            sql += " ORDER BY bm25(prompts_fts) LIMIT 10"
+            sql += " ORDER BY recommendation_score DESC LIMIT 10"
             
             cursor = conn.execute(sql, params)
             return [dict(row) for row in cursor.fetchall()]
@@ -277,34 +380,54 @@ async def classify_prompt(prompt: str) -> str:
 
 @mcp.tool()
 async def search_prompts(query: str, category: Optional[str] = None, 
-                        complexity: Optional[str] = None, limit: int = 5) -> str:
+                        complexity: Optional[str] = None, limit: int = 5,
+                        min_effectiveness: float = 0.0) -> str:
     """
-    Search the prompt database for relevant examples.
+    Search the prompt database for relevant examples with enhanced filtering.
     
     Args:
         query: Search query
         category: Filter by category (optional)
         complexity: Filter by complexity level (optional)
         limit: Maximum number of results
+        min_effectiveness: Minimum effectiveness score filter (0.0-1.0)
     
     Returns:
-        Formatted search results with relevant prompts
+        Formatted search results with relevant prompts including quality metrics
     """
-    results = prompt_db.search_prompts(query, category, complexity)
+    results = prompt_db.search_prompts(query, category, complexity, min_effectiveness)
     
     if not results:
-        return f"No prompts found for query: {query}"
+        return f"No prompts found for query: '{query}' with the specified filters."
     
     formatted_results = []
     for i, result in enumerate(results[:limit], 1):
+        # Format quality indicators
+        quality_indicator = "🟢" if result.get('quality_score', 0) >= 0.8 else "🟡" if result.get('quality_score', 0) >= 0.7 else "🔴"
+        effectiveness_indicator = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
+        
+        content_preview = result['content'][:150] + "..." if len(result['content']) > 150 else result['content']
+        
         formatted_results.append(f"""
-{i}. {result['title']} ({result['complexity_level']})
-   Category: {result['category']} | Domain: {result['domain']}
-   Content: {result['content'][:200]}...
-   Tags: {result['tags']}
+{i}. {quality_indicator} {result['title']} ({result['complexity_level']})
+   Domain: {result['domain']}
+   Quality: {result.get('quality_score', 0):.2f} | Effectiveness: {effectiveness_indicator} ({result.get('effectiveness_score', 0):.2f})
+   Content: {content_preview}
+   Tags: {result.get('tags', 'N/A')}
 """)
     
-    return f"Found {len(results)} prompts:\n" + "\n".join(formatted_results)
+    # Add usage suggestions
+    suggestions = []
+    if len(results) < 3:
+        suggestions.append("💡 Try broader search terms or reduce filters for more results")
+    
+    high_quality = [r for r in results if r.get('quality_score', 0) >= 0.8]
+    if high_quality:
+        suggestions.append(f"✨ {len(high_quality)} high-quality prompts found")
+    
+    suggestion_text = "\n" + "\n".join(suggestions) if suggestions else ""
+    
+    return f"Found {len(results)} prompts for '{query}':\n" + "\n".join(formatted_results) + suggestion_text
 
 @mcp.tool()
 async def get_framework_guidance(framework_name: str) -> str:
@@ -427,6 +550,162 @@ The Sequential Think server will work with the TypeScript CLI as fallback.
         status += "No models installed. Install a model with: ollama pull llama3.2:1b"
     
     return status
+
+@mcp.tool()
+async def get_similar_prompts(prompt_content: str, limit: int = 5) -> str:
+    """
+    Find prompts similar to the given content.
+    
+    Args:
+        prompt_content: Content to find similar prompts for
+        limit: Maximum number of similar prompts to return
+    
+    Returns:
+        List of similar prompts with relevance scores
+    """
+    # First search for the closest match
+    results = prompt_db.search_prompts(prompt_content[:100], limit=1)
+    
+    if not results:
+        return "No similar prompts found. Try using search_prompts with broader terms."
+    
+    # Get similar prompts based on the best match
+    similar = prompt_db.get_similar_prompts(results[0]['id'], limit)
+    
+    if not similar:
+        return "No similar prompts found in the database."
+    
+    formatted_results = []
+    for i, result in enumerate(similar, 1):
+        domain_match = "🎯" if result['domain'] == results[0]['domain'] else "🔍"
+        effectiveness = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
+        
+        formatted_results.append(f"""
+{i}. {domain_match} {result['title']} ({result['complexity_level']})
+   Domain: {result['domain']}
+   Effectiveness: {effectiveness} ({result.get('effectiveness_score', 0):.2f})
+   Content: {result['content'][:120]}...
+""")
+    
+    return f"Similar prompts to your query:\n" + "\n".join(formatted_results)
+
+@mcp.tool()
+async def get_prompt_recommendations(domain: Optional[str] = None, 
+                                   complexity: Optional[str] = None,
+                                   limit: int = 5) -> str:
+    """
+    Get high-quality prompt recommendations.
+    
+    Args:
+        domain: Filter by domain (e.g., "Development", "DevOps")
+        complexity: Filter by complexity level (L1-L5)
+        limit: Maximum number of recommendations
+    
+    Returns:
+        List of recommended high-quality prompts
+    """
+    recommendations = prompt_db.get_recommendations(domain, complexity)[:limit]
+    
+    if not recommendations:
+        filter_text = f" for domain '{domain}'" if domain else ""
+        filter_text += f" at complexity '{complexity}'" if complexity else ""
+        return f"No high-quality recommendations found{filter_text}. Try broader criteria."
+    
+    formatted_results = []
+    for i, result in enumerate(recommendations, 1):
+        score = result.get('recommendation_score', 0)
+        score_indicator = "🏆" if score >= 0.9 else "🥇" if score >= 0.8 else "🥈"
+        effectiveness = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
+        
+        formatted_results.append(f"""
+{i}. {score_indicator} {result['title']} ({result['complexity_level']})
+   Domain: {result['domain']}
+   Recommendation Score: {score:.2f} | Effectiveness: {effectiveness}
+   Content: {result['content'][:130]}...
+   Why recommended: High quality ({result.get('quality_score', 0):.2f}) and effectiveness
+""")
+    
+    return f"Top {len(recommendations)} recommended prompts:\n" + "\n".join(formatted_results)
+
+@mcp.tool()
+async def get_database_stats() -> str:
+    """
+    Get comprehensive statistics about the prompt database.
+    
+    Returns:
+        Database statistics including quality metrics and domain distribution
+    """
+    with sqlite3.connect(PROMPTS_DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        
+        # Basic stats
+        cursor = conn.execute("SELECT COUNT(*) as total FROM prompts")
+        total = cursor.fetchone()['total']
+        
+        cursor = conn.execute("SELECT AVG(quality_score) as avg_quality, AVG(effectiveness_score) as avg_effectiveness FROM prompts")
+        scores = cursor.fetchone()
+        
+        # Quality distribution
+        cursor = conn.execute("""
+            SELECT 
+                CASE 
+                    WHEN quality_score >= 0.9 THEN 'Excellent (0.9+)'
+                    WHEN quality_score >= 0.8 THEN 'Good (0.8-0.9)'
+                    WHEN quality_score >= 0.7 THEN 'Fair (0.7-0.8)'
+                    ELSE 'Poor (<0.7)'
+                END as quality_range,
+                COUNT(*) as count
+            FROM prompts 
+            GROUP BY quality_range
+            ORDER BY MIN(quality_score) DESC
+        """)
+        quality_dist = cursor.fetchall()
+        
+        # Domain distribution
+        cursor = conn.execute("""
+            SELECT domain, COUNT(*) as count 
+            FROM prompts 
+            GROUP BY domain 
+            ORDER BY count DESC 
+            LIMIT 8
+        """)
+        domain_dist = cursor.fetchall()
+        
+        # Complexity distribution
+        cursor = conn.execute("""
+            SELECT complexity_level, COUNT(*) as count 
+            FROM prompts 
+            GROUP BY complexity_level 
+            ORDER BY complexity_level
+        """)
+        complexity_dist = cursor.fetchall()
+        
+        stats = f"""
+📊 Sequential Think Prompt Database Statistics
+
+📈 Overview:
+- Total Prompts: {total}
+- Average Quality Score: {scores['avg_quality']:.3f}
+- Average Effectiveness Score: {scores['avg_effectiveness']:.3f}
+
+🎯 Quality Distribution:
+"""
+        
+        for row in quality_dist:
+            percentage = (row['count'] / total) * 100
+            stats += f"- {row['quality_range']}: {row['count']} ({percentage:.1f}%)\n"
+        
+        stats += "\n🏷️ Top Domains:\n"
+        for row in domain_dist:
+            percentage = (row['count'] / total) * 100
+            stats += f"- {row['domain']}: {row['count']} ({percentage:.1f}%)\n"
+        
+        stats += "\n📊 Complexity Levels:\n"
+        for row in complexity_dist:
+            percentage = (row['count'] / total) * 100
+            stats += f"- {row['complexity_level']}: {row['count']} ({percentage:.1f}%)\n"
+        
+        return stats
 
 @mcp.tool()
 async def run_sequential_think_cli(prompt: str, thoughts: int = 5) -> str:
