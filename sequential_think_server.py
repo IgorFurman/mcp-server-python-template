@@ -6,9 +6,11 @@ Comprehensive offline AI assistant with local LLM capabilities and sequential th
 
 import asyncio
 import json
+import logging
 import os
 import sqlite3
 import subprocess
+import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import httpx
@@ -20,21 +22,43 @@ from starlette.routing import Mount, Route
 from mcp.server import Server
 import uvicorn
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Initialize FastMCP server for Sequential Think tools
 mcp = FastMCP("sequential-think-ai")
+
+# Error handling decorator
+
+
+def error_handler(func_name: str):
+    """Decorator for consistent error handling across MCP tools"""
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"Error in {func_name}: {str(e)}")
+                logger.error(traceback.format_exc())
+                return f"Error: {str(e)}. Please check logs for details."
+        return wrapper
+    return decorator
+
 
 # Constants
 OLLAMA_BASE_URL = "http://localhost:11434"
 SEQUENTIAL_THINK_PATH = Path(__file__).parent / "sequential-think"
 PROMPTS_DB_PATH = Path(__file__).parent / "sequential_think_prompts.db"
 
+
 class PromptDatabase:
     """SQLite-based prompt database for fast searching and classification."""
-    
+
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.init_database()
-    
+
     def init_database(self):
         """Initialize the SQLite database schema."""
         with sqlite3.connect(self.db_path) as conn:
@@ -47,10 +71,12 @@ class PromptDatabase:
                     complexity_level TEXT NOT NULL,
                     domain TEXT NOT NULL,
                     tags TEXT NOT NULL,
+                    effectiveness_score REAL DEFAULT 0.7,
+                    quality_score REAL DEFAULT 0.7,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
+
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS frameworks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,22 +87,35 @@ class PromptDatabase:
                     complexity_range TEXT NOT NULL
                 )
             """)
-            
+
             # Create FTS5 virtual table for full-text search
             conn.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS prompts_fts USING fts5(
                     title, content, category, domain, tags, content=prompts
                 )
             """)
-            
+
+            # Add missing columns for existing databases
+            try:
+                conn.execute(
+                    "ALTER TABLE prompts ADD COLUMN effectiveness_score REAL DEFAULT 0.7")
+            except sqlite3.OperationalError:
+                pass  # Column already exists
+
+            try:
+                conn.execute(
+                    "ALTER TABLE prompts ADD COLUMN quality_score REAL DEFAULT 0.7")
+            except sqlite3.OperationalError:
+                pass  # Column already exists
+
             conn.commit()
-    
-    def search_prompts(self, query: str, category: Optional[str] = None, 
-                      complexity: Optional[str] = None, min_effectiveness: float = 0.0) -> List[Dict[str, Any]]:
+
+    def search_prompts(self, query: str, category: Optional[str] = None,
+                       complexity: Optional[str] = None, min_effectiveness: float = 0.0) -> List[Dict[str, Any]]:
         """Enhanced search with quality filtering and relevance scoring."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            
+
             # Try FTS search first, fallback to LIKE search if FTS fails
             try:
                 sql = """
@@ -87,31 +126,31 @@ class PromptDatabase:
                     WHERE prompts_fts MATCH ?
                 """
                 params = [query]
-                
+
                 if category:
                     sql += " AND p.category = ?"
                     params.append(category)
-                
+
                 if complexity:
                     sql += " AND p.complexity_level = ?"
                     params.append(complexity)
-                
+
                 if min_effectiveness > 0:
                     sql += " AND p.effectiveness_score >= ?"
                     params.append(min_effectiveness)
-                
+
                 sql += " ORDER BY relevance_score DESC, bm25(prompts_fts) LIMIT 10"
-                
+
                 cursor = conn.execute(sql, params)
                 results = [dict(row) for row in cursor.fetchall()]
-                
+
                 if results:
                     return results
-                    
+
             except Exception:
                 # FTS failed, use fallback search
                 pass
-            
+
             # Fallback search using LIKE
             sql = """
                 SELECT *, 
@@ -121,36 +160,37 @@ class PromptDatabase:
             """
             like_query = f"%{query}%"
             params = [like_query, like_query, like_query]
-            
+
             if category:
                 sql += " AND category = ?"
                 params.append(category)
-            
+
             if complexity:
                 sql += " AND complexity_level = ?"
                 params.append(complexity)
-            
+
             if min_effectiveness > 0:
                 sql += " AND effectiveness_score >= ?"
                 params.append(min_effectiveness)
-            
+
             sql += " ORDER BY relevance_score DESC LIMIT 10"
-            
+
             cursor = conn.execute(sql, params)
             return [dict(row) for row in cursor.fetchall()]
-    
+
     def get_similar_prompts(self, prompt_id: int, limit: int = 5) -> List[Dict[str, Any]]:
         """Find prompts similar to the given prompt."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            
+
             # Get the reference prompt
-            cursor = conn.execute("SELECT * FROM prompts WHERE id = ?", (prompt_id,))
+            cursor = conn.execute(
+                "SELECT * FROM prompts WHERE id = ?", (prompt_id,))
             reference = cursor.fetchone()
-            
+
             if not reference:
                 return []
-            
+
             # Find similar prompts based on domain and complexity
             cursor = conn.execute("""
                 SELECT *, 
@@ -166,19 +206,19 @@ class PromptDatabase:
                 LIMIT ?
             """, (
                 reference['effectiveness_score'],
-                reference['domain'], 
+                reference['domain'],
                 f"{reference['domain'].split('.')[0]}%",
                 prompt_id,
                 limit
             ))
-            
+
             return [dict(row) for row in cursor.fetchall()]
-    
+
     def get_recommendations(self, user_domain: str = None, complexity_preference: str = None) -> List[Dict[str, Any]]:
         """Get recommended high-quality prompts."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            
+
             sql = """
                 SELECT *, 
                        (effectiveness_score * 0.6 + quality_score * 0.4) as recommendation_score
@@ -186,26 +226,27 @@ class PromptDatabase:
                 WHERE effectiveness_score >= 0.7 AND quality_score >= 0.7
             """
             params = []
-            
+
             if user_domain:
                 sql += " AND domain LIKE ?"
                 params.append(f"%{user_domain}%")
-            
+
             if complexity_preference:
                 sql += " AND complexity_level = ?"
                 params.append(complexity_preference)
-            
+
             sql += " ORDER BY recommendation_score DESC LIMIT 10"
-            
+
             cursor = conn.execute(sql, params)
             return [dict(row) for row in cursor.fetchall()]
 
+
 class OllamaClient:
     """Client for interacting with local Ollama LLM."""
-    
+
     def __init__(self, base_url: str = OLLAMA_BASE_URL):
         self.base_url = base_url
-    
+
     async def is_available(self) -> bool:
         """Check if Ollama is running and available."""
         try:
@@ -214,7 +255,7 @@ class OllamaClient:
                 return response.status_code == 200
         except Exception:
             return False
-    
+
     async def list_models(self) -> List[str]:
         """List available local models."""
         try:
@@ -226,7 +267,7 @@ class OllamaClient:
                 return []
         except Exception:
             return []
-    
+
     async def generate(self, model: str, prompt: str, system: Optional[str] = None) -> str:
         """Generate response using local LLM."""
         try:
@@ -235,16 +276,16 @@ class OllamaClient:
                 "prompt": prompt,
                 "stream": False
             }
-            
+
             if system:
                 payload["system"] = system
-            
+
             async with httpx.AsyncClient(timeout=120.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
                     json=payload
                 )
-                
+
                 if response.status_code == 200:
                     return response.json().get('response', '')
                 else:
@@ -252,30 +293,31 @@ class OllamaClient:
         except Exception as e:
             return f"Error: {str(e)}"
 
+
 class SequentialThinkIntegration:
     """Integration layer for existing TypeScript sequential-think CLI."""
-    
+
     def __init__(self, sequential_think_path: Path):
         self.path = sequential_think_path
         self.cli_path = self.path / "ai" / "cli.ts"
-    
-    async def call_sequential_think(self, prompt: str, thoughts: int = 5, 
-                                  verbose: bool = True) -> str:
+
+    async def call_sequential_think(self, prompt: str, thoughts: int = 5,
+                                    verbose: bool = True) -> str:
         """Call the TypeScript sequential-think CLI."""
         try:
             if not self.cli_path.exists():
                 return "Sequential Think CLI not found. Please ensure it's installed."
-            
+
             cmd = [
                 "npx", "ts-node", str(self.cli_path),
                 "enhance",
                 "-p", prompt,
                 "-t", str(thoughts)
             ]
-            
+
             if verbose:
                 cmd.append("-v")
-            
+
             result = subprocess.run(
                 cmd,
                 cwd=str(self.path),
@@ -283,7 +325,7 @@ class SequentialThinkIntegration:
                 text=True,
                 timeout=60
             )
-            
+
             if result.returncode == 0:
                 return result.stdout
             else:
@@ -293,23 +335,26 @@ class SequentialThinkIntegration:
         except Exception as e:
             return f"Error: {str(e)}"
 
+
 # Initialize components
 prompt_db = PromptDatabase(PROMPTS_DB_PATH)
 ollama_client = OllamaClient()
 sequential_think = SequentialThinkIntegration(SEQUENTIAL_THINK_PATH)
 
+
 @mcp.tool()
-async def enhance_prompt(prompt: str, complexity_level: str = "L3", 
-                        use_local_llm: bool = True, model: str = "llama3.2:1b") -> str:
+@error_handler("enhance_prompt")
+async def enhance_prompt(prompt: str, complexity_level: str = "L3",
+                         use_local_llm: bool = True, model: str = "llama3.2:1b") -> str:
     """
     Enhance a prompt using AI-powered optimization.
-    
+
     Args:
         prompt: The original prompt to enhance
         complexity_level: Complexity level (L1-L5)
         use_local_llm: Whether to use local LLM or TypeScript CLI
         model: Local LLM model to use (if use_local_llm=True)
-    
+
     Returns:
         Enhanced prompt with systematic improvements
     """
@@ -324,36 +369,38 @@ async def enhance_prompt(prompt: str, complexity_level: str = "L3",
         
         Provide a clear, structured, and actionable enhanced prompt.
         """
-        
+
         enhanced = await ollama_client.generate(
             model=model,
             prompt=f"Original prompt: {prompt}\n\nEnhance this prompt:",
             system=system_prompt
         )
-        
+
         return f"Enhanced Prompt ({complexity_level}):\n{enhanced}"
     else:
         # Fallback to TypeScript CLI
         return await sequential_think.call_sequential_think(prompt)
 
+
 @mcp.tool()
+@error_handler("classify_prompt")
 async def classify_prompt(prompt: str) -> str:
     """
     Classify a prompt's complexity and provide context analysis.
-    
+
     Args:
         prompt: The prompt to classify
-    
+
     Returns:
         Classification results with complexity level and recommendations
     """
     if not await ollama_client.is_available():
         return "Local LLM not available. Classification requires Ollama to be running."
-    
+
     models = await ollama_client.list_models()
     if not models:
         return "No local models available. Please install a model using: ollama pull llama3.2:1b"
-    
+
     system_prompt = """
     Analyze the given prompt and classify it according to Sequential Thinking complexity levels:
     
@@ -369,45 +416,51 @@ async def classify_prompt(prompt: str) -> str:
     3. Recommended approach
     4. Key considerations
     """
-    
+
     classification = await ollama_client.generate(
         model=models[0],
         prompt=f"Classify this prompt: {prompt}",
         system=system_prompt
     )
-    
+
     return f"Prompt Classification:\n{classification}"
 
+
 @mcp.tool()
-async def search_prompts(query: str, category: Optional[str] = None, 
-                        complexity: Optional[str] = None, limit: int = 5,
-                        min_effectiveness: float = 0.0) -> str:
+@error_handler("search_prompts")
+async def search_prompts(query: str, category: Optional[str] = None,
+                         complexity: Optional[str] = None, limit: int = 5,
+                         min_effectiveness: float = 0.0) -> str:
     """
     Search the prompt database for relevant examples with enhanced filtering.
-    
+
     Args:
         query: Search query
         category: Filter by category (optional)
         complexity: Filter by complexity level (optional)
         limit: Maximum number of results
         min_effectiveness: Minimum effectiveness score filter (0.0-1.0)
-    
+
     Returns:
         Formatted search results with relevant prompts including quality metrics
     """
-    results = prompt_db.search_prompts(query, category, complexity, min_effectiveness)
-    
+    results = prompt_db.search_prompts(
+        query, category, complexity, min_effectiveness)
+
     if not results:
         return f"No prompts found for query: '{query}' with the specified filters."
-    
+
     formatted_results = []
     for i, result in enumerate(results[:limit], 1):
         # Format quality indicators
-        quality_indicator = "🟢" if result.get('quality_score', 0) >= 0.8 else "🟡" if result.get('quality_score', 0) >= 0.7 else "🔴"
-        effectiveness_indicator = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
-        
-        content_preview = result['content'][:150] + "..." if len(result['content']) > 150 else result['content']
-        
+        quality_indicator = "🟢" if result.get(
+            'quality_score', 0) >= 0.8 else "🟡" if result.get('quality_score', 0) >= 0.7 else "�"
+        effectiveness_indicator = "⭐" * \
+            min(5, int(result.get('effectiveness_score', 0) * 5))
+
+        content_preview = result['content'][:150] + \
+            "..." if len(result['content']) > 150 else result['content']
+
         formatted_results.append(f"""
 {i}. {quality_indicator} {result['title']} ({result['complexity_level']})
    Domain: {result['domain']}
@@ -415,28 +468,30 @@ async def search_prompts(query: str, category: Optional[str] = None,
    Content: {content_preview}
    Tags: {result.get('tags', 'N/A')}
 """)
-    
+
     # Add usage suggestions
     suggestions = []
     if len(results) < 3:
-        suggestions.append("💡 Try broader search terms or reduce filters for more results")
-    
+        suggestions.append(
+            "💡 Try broader search terms or reduce filters for more results")
+
     high_quality = [r for r in results if r.get('quality_score', 0) >= 0.8]
     if high_quality:
         suggestions.append(f"✨ {len(high_quality)} high-quality prompts found")
-    
+
     suggestion_text = "\n" + "\n".join(suggestions) if suggestions else ""
-    
+
     return f"Found {len(results)} prompts for '{query}':\n" + "\n".join(formatted_results) + suggestion_text
+
 
 @mcp.tool()
 async def get_framework_guidance(framework_name: str) -> str:
     """
     Get guidance on using specific Sequential Thinking frameworks.
-    
+
     Args:
         framework_name: Name of the framework (e.g., "Enhanced Debugging", "Prompt Taxonomy")
-    
+
     Returns:
         Framework guidance and usage instructions
     """
@@ -482,47 +537,48 @@ async def get_framework_guidance(framework_name: str) -> str:
             "usage": "Follow systematic implementation phases with success metrics"
         }
     }
-    
+
     if framework_name not in frameworks:
         available = ", ".join(frameworks.keys())
         return f"Framework '{framework_name}' not found. Available frameworks: {available}"
-    
+
     framework = frameworks[framework_name]
     result = f"## {framework_name} Framework\n\n"
     result += f"**Description:** {framework['description']}\n\n"
-    
+
     if 'phases' in framework:
         result += "**Phases:**\n"
         for phase in framework['phases']:
             result += f"- {phase}\n"
         result += "\n"
-    
+
     if 'levels' in framework:
         result += "**Complexity Levels:**\n"
         for level, desc in framework['levels'].items():
             result += f"- {level}: {desc}\n"
         result += "\n"
-    
+
     if 'features' in framework:
         result += "**Features:**\n"
         for feature in framework['features']:
             result += f"- {feature}\n"
         result += "\n"
-    
+
     result += f"**Usage:** {framework['usage']}"
-    
+
     return result
+
 
 @mcp.tool()
 async def check_ollama_status() -> str:
     """
     Check the status of the local Ollama LLM service.
-    
+
     Returns:
         Status information about Ollama and available models
     """
     is_available = await ollama_client.is_available()
-    
+
     if not is_available:
         return """
 Ollama Status: ❌ Not Available
@@ -536,11 +592,11 @@ To set up Ollama for offline AI capabilities:
 
 The Sequential Think server will work with the TypeScript CLI as fallback.
 """
-    
+
     models = await ollama_client.list_models()
-    
+
     status = "Ollama Status: ✅ Available\n\n"
-    
+
     if models:
         status += "Available Models:\n"
         for model in models:
@@ -548,75 +604,80 @@ The Sequential Think server will work with the TypeScript CLI as fallback.
         status += "\nReady for offline AI enhancement!"
     else:
         status += "No models installed. Install a model with: ollama pull llama3.2:1b"
-    
+
     return status
 
+
 @mcp.tool()
+@error_handler("get_similar_prompts")
 async def get_similar_prompts(prompt_content: str, limit: int = 5) -> str:
     """
     Find prompts similar to the given content.
-    
+
     Args:
         prompt_content: Content to find similar prompts for
         limit: Maximum number of similar prompts to return
-    
+
     Returns:
         List of similar prompts with relevance scores
     """
     # First search for the closest match
-    results = prompt_db.search_prompts(prompt_content[:100], limit=1)
-    
+    results = prompt_db.search_prompts(prompt_content[:100])
+
     if not results:
         return "No similar prompts found. Try using search_prompts with broader terms."
-    
+
     # Get similar prompts based on the best match
     similar = prompt_db.get_similar_prompts(results[0]['id'], limit)
-    
+
     if not similar:
         return "No similar prompts found in the database."
-    
+
     formatted_results = []
     for i, result in enumerate(similar, 1):
         domain_match = "🎯" if result['domain'] == results[0]['domain'] else "🔍"
-        effectiveness = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
-        
+        effectiveness = "⭐" * \
+            min(5, int(result.get('effectiveness_score', 0) * 5))
+
         formatted_results.append(f"""
 {i}. {domain_match} {result['title']} ({result['complexity_level']})
    Domain: {result['domain']}
    Effectiveness: {effectiveness} ({result.get('effectiveness_score', 0):.2f})
    Content: {result['content'][:120]}...
 """)
-    
+
     return f"Similar prompts to your query:\n" + "\n".join(formatted_results)
 
+
 @mcp.tool()
-async def get_prompt_recommendations(domain: Optional[str] = None, 
-                                   complexity: Optional[str] = None,
-                                   limit: int = 5) -> str:
+async def get_prompt_recommendations(domain: Optional[str] = None,
+                                     complexity: Optional[str] = None,
+                                     limit: int = 5) -> str:
     """
     Get high-quality prompt recommendations.
-    
+
     Args:
         domain: Filter by domain (e.g., "Development", "DevOps")
         complexity: Filter by complexity level (L1-L5)
         limit: Maximum number of recommendations
-    
+
     Returns:
         List of recommended high-quality prompts
     """
     recommendations = prompt_db.get_recommendations(domain, complexity)[:limit]
-    
+
     if not recommendations:
         filter_text = f" for domain '{domain}'" if domain else ""
         filter_text += f" at complexity '{complexity}'" if complexity else ""
         return f"No high-quality recommendations found{filter_text}. Try broader criteria."
-    
+
     formatted_results = []
     for i, result in enumerate(recommendations, 1):
         score = result.get('recommendation_score', 0)
         score_indicator = "🏆" if score >= 0.9 else "🥇" if score >= 0.8 else "🥈"
-        effectiveness = "⭐" * min(5, int(result.get('effectiveness_score', 0) * 5))
-        
+        effectiveness = "⭐" * \
+            min(5, int(result.get('effectiveness_score', 0) * 5))
+
         formatted_results.append(f"""
 {i}. {score_indicator} {result['title']} ({result['complexity_level']})
    Domain: {result['domain']}
@@ -624,27 +685,29 @@ async def get_prompt_recommendations(domain: Optional[str] = None,
    Content: {result['content'][:130]}...
    Why recommended: High quality ({result.get('quality_score', 0):.2f}) and effectiveness
 """)
-    
+
     return f"Top {len(recommendations)} recommended prompts:\n" + "\n".join(formatted_results)
+
 
 @mcp.tool()
 async def get_database_stats() -> str:
     """
     Get comprehensive statistics about the prompt database.
-    
+
     Returns:
         Database statistics including quality metrics and domain distribution
     """
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
-        
+
         # Basic stats
         cursor = conn.execute("SELECT COUNT(*) as total FROM prompts")
         total = cursor.fetchone()['total']
-        
-        cursor = conn.execute("SELECT AVG(quality_score) as avg_quality, AVG(effectiveness_score) as avg_effectiveness FROM prompts")
+
+        cursor = conn.execute(
+            "SELECT AVG(quality_score) as avg_quality, AVG(effectiveness_score) as avg_effectiveness FROM prompts")
         scores = cursor.fetchone()
-        
+
         # Quality distribution
         cursor = conn.execute("""
             SELECT 
@@ -660,7 +723,7 @@ async def get_database_stats() -> str:
             ORDER BY MIN(quality_score) DESC
         """)
         quality_dist = cursor.fetchall()
-        
+
         # Domain distribution
         cursor = conn.execute("""
             SELECT domain, COUNT(*) as count 
@@ -670,7 +733,7 @@ async def get_database_stats() -> str:
             LIMIT 8
         """)
         domain_dist = cursor.fetchall()
-        
+
         # Complexity distribution
         cursor = conn.execute("""
             SELECT complexity_level, COUNT(*) as count 
@@ -679,7 +742,7 @@ async def get_database_stats() -> str:
             ORDER BY complexity_level
         """)
         complexity_dist = cursor.fetchall()
-        
+
         stats = f"""
 📊 Sequential Think Prompt Database Statistics
 
@@ -690,41 +753,43 @@ async def get_database_stats() -> str:
 
 🎯 Quality Distribution:
 """
-        
+
         for row in quality_dist:
             percentage = (row['count'] / total) * 100
             stats += f"- {row['quality_range']}: {row['count']} ({percentage:.1f}%)\n"
-        
+
         stats += "\n🏷️ Top Domains:\n"
         for row in domain_dist:
             percentage = (row['count'] / total) * 100
             stats += f"- {row['domain']}: {row['count']} ({percentage:.1f}%)\n"
-        
+
         stats += "\n📊 Complexity Levels:\n"
         for row in complexity_dist:
             percentage = (row['count'] / total) * 100
             stats += f"- {row['complexity_level']}: {row['count']} ({percentage:.1f}%)\n"
-        
+
         return stats
+
 
 @mcp.tool()
 async def run_sequential_think_cli(prompt: str, thoughts: int = 5) -> str:
     """
     Run the TypeScript Sequential Think CLI directly.
-    
+
     Args:
         prompt: The prompt to process
         thoughts: Number of thinking steps (1-20)
-    
+
     Returns:
         Sequential thinking analysis results
     """
     return await sequential_think.call_sequential_think(prompt, thoughts, verbose=True)
 
+
 def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
     """Create a Starlette application for SSE transport."""
     sse = SseServerTransport("/messages/")
-    
+
     async def handle_sse(request: Request) -> None:
         async with sse.connect_sse(
             request.scope,
@@ -736,7 +801,7 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
                 write_stream,
                 mcp_server.create_initialization_options(),
             )
-    
+
     return Starlette(
         debug=debug,
         routes=[
@@ -745,32 +810,35 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
         ],
     )
 
+
 if __name__ == "__main__":
     mcp_server = mcp._mcp_server
-    
+
     import argparse
-    
-    parser = argparse.ArgumentParser(description='Sequential Think MCP Server - Offline AI Assistant')
+
+    parser = argparse.ArgumentParser(
+        description='Sequential Think MCP Server - Offline AI Assistant')
     parser.add_argument('--transport', choices=['stdio', 'sse'], default='stdio',
-                       help='Transport mode (stdio or sse)')
+                        help='Transport mode (stdio or sse)')
     parser.add_argument('--host', default='0.0.0.0',
-                       help='Host to bind to (for SSE mode)')
+                        help='Host to bind to (for SSE mode)')
     parser.add_argument('--port', type=int, default=7071,
-                       help='Port to listen on (for SSE mode)')
+                        help='Port to listen on (for SSE mode)')
     parser.add_argument('--setup-db', action='store_true',
-                       help='Initialize prompt database')
-    
+                        help='Initialize prompt database')
+
     args = parser.parse_args()
-    
+
     if args.setup_db:
         print("Setting up prompt database...")
         prompt_db.init_database()
         print("Database initialized successfully!")
         exit(0)
-    
+
     if args.transport == 'stdio':
         mcp.run(transport='stdio')
     else:
         starlette_app = create_starlette_app(mcp_server, debug=True)
-        print(f"Sequential Think AI Server starting on http://{args.host}:{args.port}")
+        print(
+            f"Sequential Think AI Server starting on http://{args.host}:{args.port}")
         uvicorn.run(starlette_app, host=args.host, port=args.port)

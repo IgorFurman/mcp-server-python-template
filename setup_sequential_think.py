@@ -12,6 +12,7 @@ from typing import Dict, List
 PROMPTS_DB_PATH = Path(__file__).parent / "sequential_think_prompts.db"
 SEQUENTIAL_THINK_PATH = Path(__file__).parent / "sequential-think"
 
+
 def init_database():
     """Initialize the SQLite database with schema and indexes."""
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
@@ -28,7 +29,7 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS frameworks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,21 +40,25 @@ def init_database():
                 complexity_range TEXT NOT NULL
             )
         """)
-        
+
         # Create FTS5 virtual table for full-text search
         conn.execute("""
             CREATE VIRTUAL TABLE IF NOT EXISTS prompts_fts USING fts5(
                 title, content, category, domain, tags, content=prompts
             )
         """)
-        
+
         # Create indexes
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_category ON prompts(category)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_complexity ON prompts(complexity_level)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_domain ON prompts(domain)")
-        
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_category ON prompts(category)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_complexity ON prompts(complexity_level)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_domain ON prompts(domain)")
+
         conn.commit()
         print("✅ Database schema initialized")
+
 
 def load_sample_prompts():
     """Load sample prompts into the database."""
@@ -139,7 +144,7 @@ def load_sample_prompts():
             "tags": "technical-debt,legacy,code-quality,prioritization"
         }
     ]
-    
+
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
         for prompt in sample_prompts:
             conn.execute("""
@@ -153,11 +158,12 @@ def load_sample_prompts():
                 prompt["domain"],
                 prompt["tags"]
             ))
-        
+
         # Update FTS5 table
         conn.execute("INSERT INTO prompts_fts(prompts_fts) VALUES('rebuild')")
         conn.commit()
         print(f"✅ Loaded {len(sample_prompts)} sample prompts")
+
 
 def load_frameworks():
     """Load framework definitions into the database."""
@@ -191,7 +197,7 @@ def load_frameworks():
             "complexity_range": "L4-L5"
         }
     ]
-    
+
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
         for framework in frameworks:
             conn.execute("""
@@ -204,21 +210,22 @@ def load_frameworks():
                 framework["use_cases"],
                 framework["complexity_range"]
             ))
-        
+
         conn.commit()
         print(f"✅ Loaded {len(frameworks)} framework definitions")
+
 
 def check_typescript_integration():
     """Check if TypeScript sequential-think system is available."""
     if SEQUENTIAL_THINK_PATH.exists():
         print("✅ TypeScript Sequential Think system found")
-        
+
         cli_path = SEQUENTIAL_THINK_PATH / "ai" / "cli.ts"
         if cli_path.exists():
             print("✅ Sequential Think CLI found")
         else:
             print("⚠️  Sequential Think CLI not found at expected location")
-        
+
         package_json = SEQUENTIAL_THINK_PATH / "package.json"
         if package_json.exists():
             print("✅ Node.js dependencies configured")
@@ -228,34 +235,36 @@ def check_typescript_integration():
         print("⚠️  TypeScript Sequential Think system not found")
         print("   The Python MCP server will work with local LLM only")
 
+
 def main():
     """Main setup function."""
     print("🚀 Setting up Sequential Think MCP Server")
     print("=" * 50)
-    
+
     # Initialize database
     print("\n📚 Initializing database...")
     init_database()
-    
+
     # Load sample data
     print("\n📝 Loading sample prompts...")
     load_sample_prompts()
-    
+
     print("\n🧠 Loading framework definitions...")
     load_frameworks()
-    
+
     # Check TypeScript integration
     print("\n🔗 Checking TypeScript integration...")
     check_typescript_integration()
-    
+
     print("\n✨ Setup complete!")
     print("\nNext steps:")
     print("1. Install Ollama: https://ollama.ai/")
     print("2. Install a model: ollama pull llama3.2:1b")
     print("3. Start the server: python sequential_think_server.py")
     print("4. Add to Claude Desktop config for MCP integration")
-    
+
     print(f"\nDatabase created at: {PROMPTS_DB_PATH}")
+
 
 if __name__ == "__main__":
     main()

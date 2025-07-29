@@ -2,13 +2,13 @@ version: '3.8'
 
 services:
   sequential-think-server:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: mcp-sequential-think
     ports:
-      - "7070:7070"  # SSE port for main server
-      - "7071:7071"  # SSE port for sequential think server
+      - "7070:7070" # SSE port for main server
+      - "7071:7071" # SSE port for sequential think server
     environment:
       - PYTHONPATH=/app
       - MCP_TRANSPORT=sse
@@ -21,7 +21,7 @@ services:
       - ./config:/app/config:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7071/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:7071/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,7 +31,7 @@ services:
 
   # Optional: Main MCP server alongside
   mcp-server:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: mcp-main-server
@@ -42,7 +42,7 @@ services:
       - MCP_TRANSPORT=sse
       - MCP_HOST=0.0.0.0
       - MCP_PORT=7070
-    command: ["python", "server.py", "--transport", "sse", "--host", "0.0.0.0", "--port", "7070"]
+    command: [ "python", "server.py", "--transport", "sse", "--host", "0.0.0.0", "--port", "7070" ]
     restart: unless-stopped
     networks:
       - mcp-network
