@@ -223,6 +223,7 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # Add database statistics if database exists
         if self.db_path.exists():
             with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
                 cursor = conn.execute("SELECT COUNT(*) as total FROM prompts")
                 total = cursor.fetchone()['total']
 

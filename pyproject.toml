@@ -13,3 +13,6 @@ dependencies = [
 
 [project.scripts]
 sequential-think-server = "sequential_think_server:main"
+
+[tool.setuptools]
+py-modules = ["server", "sequential_think_mcp_server", "sync_prompt_data", "core_utils", "security_utils", "config_loader"]

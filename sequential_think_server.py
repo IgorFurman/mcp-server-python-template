@@ -811,7 +811,8 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
     )
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the Sequential Think MCP Server."""
     mcp_server = mcp._mcp_server
 
     import argparse
@@ -833,7 +834,7 @@ if __name__ == "__main__":
         print("Setting up prompt database...")
         prompt_db.init_database()
         print("Database initialized successfully!")
-        exit(0)
+        return
 
     if args.transport == 'stdio':
         mcp.run(transport='stdio')
@@ -842,3 +843,7 @@ if __name__ == "__main__":
         print(
             f"Sequential Think AI Server starting on http://{args.host}:{args.port}")
         uvicorn.run(starlette_app, host=args.host, port=args.port)
+
+
+if __name__ == "__main__":
+    main()

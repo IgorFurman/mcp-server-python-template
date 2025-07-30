@@ -1,0 +1,15 @@
+#!/bin/bash
+# Sequential Think CLI wrapper - System-wide version
+# This wrapper calls the actual CLI from the project directory
+
+PROJECT_DIR="${PROJECT_DIR:-$(dirname "$(realpath "$0")")}"
+ACTUAL_CLI="$PROJECT_DIR/sequential-think-cli"
+
+if [ ! -f "$ACTUAL_CLI" ]; then
+    echo "Error: Sequential Think CLI not found at $ACTUAL_CLI"
+    exit 1
+fi
+
+# Change to project directory and run the actual CLI
+cd "$PROJECT_DIR" || exit 1
+"$ACTUAL_CLI" "$@"
