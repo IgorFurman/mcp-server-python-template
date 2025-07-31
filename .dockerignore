@@ -31,3 +31,8 @@
 **/.vscode
 **/.idea
 **/test-repo
+
+# Exclude unused server files to avoid tool conflicts in container
+server.py
+sequential_think_mcp_server.py
+protocals/example_weather.py

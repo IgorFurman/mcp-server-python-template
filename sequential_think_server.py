@@ -27,7 +27,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server for Sequential Think tools
-mcp = FastMCP("sequential-think-ai")
+# Use unique server name to avoid conflicts
+mcp = FastMCP("sequential-think-ai-server")
 
 # Error handling decorator
 
@@ -35,14 +36,19 @@ mcp = FastMCP("sequential-think-ai")
 def error_handler(func_name: str):
     """Decorator for consistent error handling across MCP tools"""
     def decorator(func):
-        async def wrapper(*args, **kwargs):
+        # Use the original function name to avoid "wrapper" duplication
+        async def error_wrapped_function(*args, **kwargs):
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
                 logger.error(f"Error in {func_name}: {str(e)}")
                 logger.error(traceback.format_exc())
                 return f"Error: {str(e)}. Please check logs for details."
-        return wrapper
+        
+        # Preserve original function metadata
+        error_wrapped_function.__name__ = func.__name__
+        error_wrapped_function.__qualname__ = func.__qualname__
+        return error_wrapped_function
     return decorator
 
 
@@ -802,9 +808,43 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
                 mcp_server.create_initialization_options(),
             )
 
+    async def handle_root(request: Request):
+        """Root endpoint handler - redirects to SSE endpoint"""
+        from starlette.responses import JSONResponse
+        return JSONResponse({
+            "service": "Sequential Think MCP Server",
+            "version": "1.0.0",
+            "status": "running",
+            "endpoints": {
+                "sse": "/sse",
+                "messages": "/messages/",
+                "health": "/health"
+            },
+            "transport": "sse"
+        })
+
+    async def handle_health(request: Request):
+        """Health check endpoint for Docker container"""
+        from starlette.responses import JSONResponse
+        try:
+            # Basic health check - ensure database is accessible
+            db_status = "ok" if prompt_db.db_path.exists() else "error"
+            return JSONResponse({
+                "status": "healthy",
+                "database": db_status,
+                "service": "Sequential Think MCP Server"
+            })
+        except Exception as e:
+            return JSONResponse({
+                "status": "unhealthy", 
+                "error": str(e)
+            }, status_code=500)
+
     return Starlette(
         debug=debug,
         routes=[
+            Route("/", endpoint=handle_root, methods=["GET"]),
+            Route("/health", endpoint=handle_health, methods=["GET"]),
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
         ],

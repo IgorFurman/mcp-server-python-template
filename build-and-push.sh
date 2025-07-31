@@ -5,7 +5,7 @@ set -e
 
 # Configuration
 IMAGE_NAME="mcp-sequential-think"
-REGISTRY="your-registry" # Replace with your registry (docker.io, ghcr.io, etc.)
+REGISTRY="igorfurman" # Your Docker Hub username
 TAG=${1:-latest}
 FULL_IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 

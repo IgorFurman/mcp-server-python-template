@@ -95,11 +95,11 @@ class DatabaseManager:
                  complexity_level, domain, tags, effectiveness_score, quality_score)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                analysis['id'], 
+                analysis['id'],
                 f"Enhanced: {analysis['original_prompt'][:50]}...",
                 analysis['original_prompt'],
                 analysis['original_prompt'],
-                analysis['optimized_prompt'], 
+                analysis['optimized_prompt'],
                 analysis['domain'],
                 analysis['complexity'],
                 analysis['domain'],

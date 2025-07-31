@@ -4,6 +4,7 @@ Setup script for Sequential Think MCP Server
 Initializes the prompt database with sample data from the TypeScript collection.
 """
 
+import hashlib
 import json
 import sqlite3
 from pathlib import Path
@@ -16,17 +17,40 @@ SEQUENTIAL_THINK_PATH = Path(__file__).parent / "sequential-think"
 def init_database():
     """Initialize the SQLite database with schema and indexes."""
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
-        # Create tables
+        # Create tables with the correct schema matching the MCP server
         conn.execute("""
             CREATE TABLE IF NOT EXISTS prompts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hash TEXT UNIQUE NOT NULL,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
+                original_prompt TEXT,
+                enhanced_prompt TEXT,
                 category TEXT NOT NULL,
-                complexity_level TEXT NOT NULL,
+                complexity_level TEXT NOT NULL CHECK (complexity_level IN ('L1', 'L2', 'L3', 'L4', 'L5')),
+                context_level TEXT DEFAULT 'C2' CHECK (context_level IN ('C1', 'C2', 'C3', 'C4', 'C5')),
                 domain TEXT NOT NULL,
-                tags TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                tags TEXT DEFAULT '',
+                effectiveness_score REAL DEFAULT 0.7 CHECK (effectiveness_score BETWEEN 0.0 AND 1.0),
+                quality_score REAL DEFAULT 0.7 CHECK (quality_score BETWEEN 0.0 AND 1.0),
+                usage_count INTEGER DEFAULT 0,
+                success_rate REAL DEFAULT 0.0 CHECK (success_rate BETWEEN 0.0 AND 1.0),
+                source_file TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS prompt_metrics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prompt_id INTEGER REFERENCES prompts(id),
+                successful BOOLEAN NOT NULL,
+                steps INTEGER DEFAULT 0,
+                user_rating REAL CHECK (user_rating BETWEEN 0.0 AND 5.0),
+                categories TEXT DEFAULT '[]',
+                execution_time REAL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -147,10 +171,15 @@ def load_sample_prompts():
 
     with sqlite3.connect(PROMPTS_DB_PATH) as conn:
         for prompt in sample_prompts:
+            # Generate hash for the prompt
+            content_for_hash = f"{prompt['title']}-{prompt['content']}-{prompt['category']}"
+            prompt_hash = hashlib.md5(content_for_hash.encode()).hexdigest()
+
             conn.execute("""
-                INSERT INTO prompts (title, content, category, complexity_level, domain, tags)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO prompts (hash, title, content, category, complexity_level, domain, tags)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
+                prompt_hash,
                 prompt["title"],
                 prompt["content"],
                 prompt["category"],
