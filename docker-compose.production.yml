@@ -1,0 +1,245 @@
+# Production Docker Compose for mcp-sequential-think:ollama-enhanced
+# Enhanced with Ollama integration and comprehensive monitoring
+version: '3.8'
+
+services:
+  sequential-think-server:
+    image: mcp-sequential-think:ollama-enhanced
+    container_name: sequential-think-mcp-production
+    restart: unless-stopped
+    
+    # Resource Management
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    
+    # Environment Configuration
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=sse
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=7071
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - SEQUENTIAL_THINK_ENV=production
+      - LOG_LEVEL=info
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_INTERVAL=30
+      
+    # Port Mapping
+    ports:
+      - "7071:7071"
+      - "9090:9090"  # Metrics endpoint
+    
+    # Volume Mounts
+    volumes:
+      - ./data:/app/data:rw
+      - ./logs:/app/logs:rw
+      - sequential-think-cache:/app/cache
+    
+    # Health Check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7071/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Dependencies
+    depends_on:
+      ollama:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    
+    # Security
+    user: "1001:1001"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/temp
+    
+    # Networking
+    networks:
+      - default
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=sequential-think-server"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-service
+    restart: unless-stopped
+    
+    # GPU Support (uncomment if available)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=/models
+    
+    ports:
+      - "11434:11434"
+    
+    volumes:
+      - ollama-models:/models
+      - ./ollama-config:/root/.ollama
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    networks:
+      - sequential-think-network
+
+  # Model Preloader Service
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-model-preloader
+    depends_on:
+      ollama:
+        condition: service_healthy
+    
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    
+    volumes:
+      - ./scripts/preload-models.sh:/preload-models.sh:ro
+    
+    command: /bin/bash /preload-models.sh
+    
+    networks:
+      - sequential-think-network
+    
+    restart: "no"
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-sequential-think
+    restart: unless-stopped
+    
+    ports:
+      - "9091:9090"
+    
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    
+    networks:
+      - monitoring-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-sequential-think
+    restart: unless-stopped
+    
+    ports:
+      - "3001:3000"
+    
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=sequential-think-admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    
+    networks:
+      - monitoring-network
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis-sequential-think
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass sequential-think-cache
+    
+    volumes:
+      - redis-data:/data
+    
+    networks:
+      - sequential-think-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-sequential-think
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    
+    depends_on:
+      - sequential-think-server
+    
+    networks:
+      - sequential-think-network
+      - monitoring-network
+
+# Networks
+networks:
+  default:
+    driver: bridge
+
+# Volumes
+volumes:
+  ollama-models:
+    driver: local
+  sequential-think-cache:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  redis-data:
+    driver: local
+  nginx-logs:
+    driver: local
+
+# Secrets (for production use)
+secrets:
+  sequential-think-api-key:
+    external: true
+  ollama-auth-token:
+    external: true

@@ -1,0 +1,54 @@
+# Prometheus Configuration for Sequential Think MCP Server
+# Enhanced monitoring with Ollama integration metrics
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  # Sequential Think MCP Server Metrics
+  - job_name: 'sequential-think-server'
+    static_configs:
+      - targets: ['sequential-think-server:9090']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    
+  # Ollama Service Metrics
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['ollama:11434']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    
+  # Node Exporter for System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+      
+  # Container Metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    
+  # Redis Metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: /metrics
+
+# Alerting Configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Storage Configuration
+storage:
+  tsdb:
+    retention_time: "30d"
+    retention_size: "10GB"

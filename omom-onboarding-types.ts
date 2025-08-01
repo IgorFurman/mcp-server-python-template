@@ -129,12 +129,12 @@ export interface OnboardingError {
   readonly timestamp: Date;
 }
 
-export type OnboardingErrorType = 
-  | 'validation' 
-  | 'network' 
-  | 'server' 
-  | 'permission' 
-  | 'timeout' 
+export type OnboardingErrorType =
+  | 'validation'
+  | 'network'
+  | 'server'
+  | 'permission'
+  | 'timeout'
   | 'rate_limit'
   | 'data_conflict';
 
@@ -179,14 +179,14 @@ export interface OrganizationInfo {
   website?: string;
 }
 
-export type CompanySize = 
-  | '1-10' 
-  | '11-50' 
-  | '51-200' 
-  | '201-1000' 
+export type CompanySize =
+  | '1-10'
+  | '11-50'
+  | '51-200'
+  | '201-1000'
   | '1000+';
 
-export type Industry = 
+export type Industry =
   | 'technology'
   | 'retail'
   | 'manufacturing'
@@ -259,7 +259,7 @@ export interface InAppNotificationSettings {
 
 export type NotificationFrequency = 'immediate' | 'hourly' | 'daily' | 'weekly';
 
-export type NotificationCategory = 
+export type NotificationCategory =
   | 'orders'
   | 'inventory'
   | 'system'
@@ -290,7 +290,7 @@ export interface AccessibilityPreferences {
 
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 
-export type ColorBlindnessType = 
+export type ColorBlindnessType =
   | 'protanopia'
   | 'deuteranopia'
   | 'tritanopia'
@@ -311,9 +311,9 @@ export interface HelpResource {
   readonly tags: readonly string[];
 }
 
-export type HelpResourceType = 
+export type HelpResourceType =
   | 'video'
-  | 'article' 
+  | 'article'
   | 'interactive-tour'
   | 'faq'
   | 'live-chat'
@@ -341,7 +341,7 @@ export interface UserInteraction {
   readonly metadata?: Record<string, any>;
 }
 
-export type InteractionType = 
+export type InteractionType =
   | 'click'
   | 'focus'
   | 'input'
@@ -362,7 +362,7 @@ export interface DashboardPreferences {
 
 export type DashboardLayout = 'compact' | 'comfortable' | 'spacious';
 
-export type DefaultView = 
+export type DefaultView =
   | 'orders'
   | 'inventory'
   | 'analytics'
@@ -404,7 +404,7 @@ export interface ConnectedService {
   readonly configuration: Record<string, any>;
 }
 
-export type ServiceType = 
+export type ServiceType =
   | 'crm'
   | 'erp'
   | 'payment'
@@ -412,7 +412,7 @@ export type ServiceType =
   | 'analytics'
   | 'communication';
 
-export type ConnectionStatus = 
+export type ConnectionStatus =
   | 'connected'
   | 'disconnected'
   | 'error'
@@ -459,7 +459,7 @@ export interface OnboardingContextType {
   progress: OnboardingStatus;
   formData: Partial<OnboardingFormData>;
   errors: readonly OnboardingError[];
-  
+
   // Actions
   goToStep: (stepId: string) => void;
   completeStep: (stepId: string, data?: Record<string, any>) => Promise<void>;
@@ -468,7 +468,7 @@ export interface OnboardingContextType {
   handleError: (error: OnboardingError) => void;
   clearError: (errorCode: string) => void;
   restartOnboarding: () => void;
-  
+
   // State
   isLoading: boolean;
   isComplete: boolean;
