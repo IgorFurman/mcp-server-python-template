@@ -44,7 +44,7 @@ def error_handler(func_name: str):
                 logger.error(f"Error in {func_name}: {str(e)}")
                 logger.error(traceback.format_exc())
                 return f"Error: {str(e)}. Please check logs for details."
-        
+
         # Preserve original function metadata
         error_wrapped_function.__name__ = func.__name__
         error_wrapped_function.__qualname__ = func.__qualname__
@@ -54,6 +54,128 @@ def error_handler(func_name: str):
 
 # Constants
 OLLAMA_BASE_URL = "http://localhost:11434"
+
+
+class OllamaEnhancer:
+    """Enhanced prompt optimization using local Ollama models"""
+
+    def __init__(self):
+        self.base_url = OLLAMA_BASE_URL
+        self.models = {
+            "code_analysis": "deepseek-r1:8b",  # Best for code-related tasks
+            "complex_thinking": "deepseek-r1:14b",  # Best for systematic analysis
+            "general": "llama3.2:latest"  # Lightweight general purpose
+        }
+
+    async def enhance_prompt_with_context(self, prompt: str, domain: str = "development") -> dict:
+        """Enhance prompts with domain-specific intelligence"""
+
+        # Choose model based on task complexity
+        model = self.models["code_analysis"] if "code" in prompt.lower(
+        ) or "react" in prompt.lower() else self.models["general"]
+
+        enhancement_prompt = f"""
+You are an expert prompt engineer specializing in {domain}. 
+
+Original prompt: "{prompt}"
+
+Task: Enhance this prompt with:
+1. Domain-specific terminology and context
+2. Specific, measurable success criteria  
+3. Step-by-step approach recommendations
+4. Relevant frameworks or methodologies
+5. Potential pitfalls to avoid
+
+Focus on making it actionable for a senior developer.
+
+Enhanced prompt:"""
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/api/generate",
+                    json={
+                        "model": model,
+                        "prompt": enhancement_prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": 0.7,
+                            "max_tokens": 500
+                        }
+                    },
+                    timeout=30.0
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    enhanced = result.get("response", "").strip()
+
+                    return {
+                        "original": prompt,
+                        "enhanced": enhanced,
+                        "model_used": model,
+                        "domain": domain,
+                        "enhancement_type": "ollama_powered"
+                    }
+        except Exception as e:
+            logger.error(f"Ollama enhancement failed: {e}")
+
+        # Fallback to original prompt if Ollama fails
+        return {
+            "original": prompt,
+            "enhanced": prompt,
+            "model_used": "fallback",
+            "domain": domain,
+            "enhancement_type": "fallback"
+        }
+
+    async def get_domain_specific_framework(self, domain: str, problem_type: str) -> str:
+        """Generate domain-specific frameworks using DeepSeek"""
+
+        framework_prompt = f"""
+You are an expert in {domain} with deep knowledge of {problem_type}.
+
+Create a systematic framework for analyzing {problem_type} in {domain} context.
+
+Requirements:
+1. 5-7 concrete steps
+2. Specific questions to ask at each step
+3. Tools or methods to use
+4. Success criteria for each step
+5. Common pitfalls and how to avoid them
+
+Focus on practical, actionable guidance for senior developers.
+
+Framework:"""
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/api/generate",
+                    json={
+                        # Use the more powerful model
+                        "model": self.models["complex_thinking"],
+                        "prompt": framework_prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": 0.6,
+                            "max_tokens": 800
+                        }
+                    },
+                    timeout=45.0
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    return result.get("response", "").strip()
+        except Exception as e:
+            logger.error(f"Ollama framework generation failed: {e}")
+
+        return f"Framework for {problem_type} in {domain} context (Ollama unavailable)"
+
+
+# Initialize Ollama enhancer
+ollama_enhancer = OllamaEnhancer()
 SEQUENTIAL_THINK_PATH = Path(__file__).parent / "sequential-think"
 PROMPTS_DB_PATH = Path(__file__).parent / "sequential_think_prompts.db"
 
@@ -792,6 +914,111 @@ async def run_sequential_think_cli(prompt: str, thoughts: int = 5) -> str:
     return await sequential_think.call_sequential_think(prompt, thoughts, verbose=True)
 
 
+# === OLLAMA-POWERED ENHANCEMENT TOOLS ===
+
+@mcp.tool()
+async def enhance_prompt_with_ollama(prompt: str, domain: str = "development") -> str:
+    """
+    Enhance prompts using local Ollama models (DeepSeek/Llama) for superior context-aware optimization.
+    
+    Args:
+        prompt: The original prompt to enhance  
+        domain: Context domain (development, architecture, performance, etc.)
+        
+    Returns:
+        Enhanced prompt with domain-specific intelligence and actionable guidance
+    """
+    
+    try:
+        # Use Ollama for intelligent enhancement
+        result = await ollama_enhancer.enhance_prompt_with_context(prompt, domain)
+        
+        enhancement_output = f"""
+🚀 **Ollama-Enhanced Prompt Analysis**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 **Original Prompt:**
+{result['original']}
+
+✨ **Enhanced Prompt:**
+{result['enhanced']}
+
+🤖 **Model Used:** {result['model_used']} 
+🎯 **Domain:** {result['domain']}
+🔧 **Enhancement Type:** {result['enhancement_type']}
+
+💡 **Usage:** Copy the enhanced prompt above for superior systematic thinking results.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
+        return enhancement_output
+        
+    except Exception as e:
+        logger.error(f"Ollama enhancement failed: {e}")
+        return f"Enhancement error: {str(e)}. Using original prompt: {prompt}"
+
+
+@mcp.tool() 
+async def get_ollama_framework(domain: str, problem_type: str) -> str:
+    """
+    Generate domain-specific analytical frameworks using DeepSeek models.
+    
+    Args:
+        domain: The domain context (react-development, system-architecture, performance-optimization, etc.)
+        problem_type: Specific problem type (component-refactoring, onboarding-optimization, etc.)
+        
+    Returns:
+        Specialized framework with concrete steps, tools, and success criteria
+    """
+    
+    try:
+        framework = await ollama_enhancer.get_domain_specific_framework(domain, problem_type)
+        
+        framework_output = f"""
+🎯 **Ollama-Generated Framework: {problem_type.title()} in {domain.title()}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{framework}
+
+🤖 **Generated by:** DeepSeek R1 14B (Complex Thinking Model)
+🎯 **Domain:** {domain}
+📋 **Problem Type:** {problem_type}
+
+💡 **Usage:** Follow this framework systematically for optimal analysis results.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
+        return framework_output
+        
+    except Exception as e:
+        logger.error(f"Framework generation failed: {e}")
+        return f"Framework generation error: {str(e)}. Try using check_ollama_status first."
+
+
+@mcp.tool()
+async def ollama_code_review_framework() -> str:
+    """
+    Get a specialized code review framework powered by DeepSeek for systematic code analysis.
+    
+    Returns:
+        Comprehensive code review framework with security, performance, and maintainability focus
+    """
+    
+    return await get_ollama_framework("software-development", "code-review-analysis")
+
+
+@mcp.tool()
+async def ollama_react_optimization_framework() -> str:
+    """
+    Get React-specific optimization framework using DeepSeek expertise.
+    
+    Returns:
+        Specialized React performance and architecture optimization framework
+    """
+    
+    return await get_ollama_framework("react-development", "component-optimization-and-performance")
+
+
 def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
     """Create a Starlette application for SSE transport."""
     sse = SseServerTransport("/messages/")
@@ -836,7 +1063,7 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
             })
         except Exception as e:
             return JSONResponse({
-                "status": "unhealthy", 
+                "status": "unhealthy",
                 "error": str(e)
             }, status_code=500)
 
