@@ -1,0 +1,140 @@
+{
+  "folders": [
+    {
+      "name": "Sequential Think MCP Server",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    
+    "supabase.projectId": "${env:SUPABASE_PROJECT_ID}",
+    "supabase.localDevelopment": true,
+    "supabase.enableCopilotIntegration": true,
+    "supabase.autoConnect": true,
+    
+    "mcp.servers": {
+      "sequential-think-enhanced": {
+        "type": "stdio",
+        "command": "bash",
+        "args": [
+          "-c", 
+          "cd ${workspaceFolder} && source .venv/bin/activate && python sequential_think_mcp_server.py --transport stdio --database supabase"
+        ],
+        "env": {
+          "SUPABASE_URL": "http://localhost:54321",
+          "SUPABASE_SERVICE_KEY": "${env:SUPABASE_SERVICE_KEY}",
+          "OLLAMA_BASE_URL": "http://localhost:11434",
+          "MCP_DATABASE_TYPE": "supabase",
+          "SEQUENTIAL_THINK_ENV": "development"
+        }
+      }
+    },
+    
+    "terminal.integrated.env.linux": {
+      "SUPABASE_URL": "http://localhost:54321",
+      "OLLAMA_BASE_URL": "http://localhost:11434",
+      "MCP_ENV": "development"
+    },
+    
+    "files.associations": {
+      "*.sql": "sql",
+      "supabase/migrations/*.sql": "sql",
+      "supabase/functions/**/*.ts": "typescript"
+    },
+    
+    "emmet.includeLanguages": {
+      "typescript": "typescriptreact",
+      "javascript": "javascriptreact"
+    },
+    
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "typescript.suggest.autoImports": true,
+    
+    "github.copilot.enable": {
+      "*": true,
+      "yaml": true,
+      "sql": true,
+      "typescript": true,
+      "python": true
+    },
+    
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    },
+    
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.venv": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/__pycache__": true,
+      "**/supabase/.branches": true,
+      "**/supabase/.temp": true
+    },
+    
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true
+    },
+    
+    "tasks.version": "2.0.0"
+  },
+  "extensions": {
+    "recommendations": [
+      "supabase.supabase",
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "github.copilot",
+      "github.copilot-chat",
+      "ms-vscode.vscode-typescript-next",
+      "bradlc.vscode-tailwindcss",
+      "formulahendry.auto-rename-tag",
+      "christian-kohler.path-intellisense",
+      "ms-vscode.vscode-json"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug MCP Server",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/sequential_think_mcp_server.py",
+        "args": ["--transport", "stdio", "--debug"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}",
+          "SUPABASE_URL": "http://localhost:54321",
+          "OLLAMA_BASE_URL": "http://localhost:11434",
+          "MCP_DATABASE_TYPE": "supabase",
+          "SEQUENTIAL_THINK_ENV": "development"
+        },
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      {
+        "name": "Debug MCP Server (SSE)",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/sequential_think_mcp_server.py",
+        "args": ["--transport", "sse", "--host", "localhost", "--port", "7071"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}",
+          "SUPABASE_URL": "http://localhost:54321",
+          "OLLAMA_BASE_URL": "http://localhost:11434"
+        },
+        "python": "${workspaceFolder}/.venv/bin/python"
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@ services:
     image: mcp-sequential-think:ollama-enhanced
     container_name: sequential-think-mcp-production
     restart: unless-stopped
-    
+
     # Environment Configuration
     environment:
       - NODE_ENV=production
@@ -16,19 +16,19 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - SEQUENTIAL_THINK_ENV=production
       - LOG_LEVEL=info
-      
+
     # Port Mapping
     ports:
       - "7071:7071"
-    
+
     # Health Check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7071/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:7071/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    
+
     # Dependencies
     depends_on:
       ollama:
@@ -38,18 +38,18 @@ services:
     image: ollama/ollama:latest
     container_name: ollama-service
     restart: unless-stopped
-    
+
     environment:
       - OLLAMA_HOST=0.0.0.0
-    
+
     ports:
       - "11434:11434"
-    
+
     volumes:
       - ollama-models:/root/.ollama
-    
+
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -62,15 +62,15 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
-    
+
     environment:
       - OLLAMA_HOST=http://ollama:11434
-    
+
     volumes:
       - ./scripts/preload-models.sh:/preload-models.sh:ro
-    
+
     command: /bin/bash /preload-models.sh
-    
+
     restart: "no"
 
 # Volumes
