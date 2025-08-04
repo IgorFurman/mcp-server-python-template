@@ -1,257 +1,66 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "label": "MCP: Start Server (stdio)",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python server.py --transport stdio"
+            "label": "🚀 SETUP: Complete Development Environment",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Setup: Python Virtual Environment",
+                "Setup: Install Dependencies",
+                "Setup: Initialize Database",
+                "Setup: Validate Configuration"
             ],
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Sequential-Think: Start Server",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python sequential_think_server.py --transport stdio"
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "MCP: Start Server (SSE)",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python server.py --transport sse --host 0.0.0.0 --port 7070"
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Sequential-Think: Start Server (SSE)",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python sequential_think_server.py --transport sse --host 0.0.0.0 --port 7071"
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Setup: Install Python Dependencies",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "python -m venv .venv && source .venv/bin/activate && pip install -e ."
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "args": [
-                "install"
-            ],
-            "command": "npm",
-            "group": "build",
-            "label": "Sequential-Think: Install AI Dependencies",
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template/sequential-think/ai"
-            },
-            "type": "shell"
-        },
-        {
-            "args": [
-                "run",
-                "enhance-interactive"
-            ],
-            "command": "npm",
-            "group": "test",
-            "label": "Sequential-Think: Enhance Prompt",
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template/sequential-think/ai"
-            },
-            "presentation": {
-                "echo": true,
                 "focus": true,
-                "panel": "new",
-                "reveal": "always"
-            },
-            "type": "shell"
-        },
-        {
-            "label": "MCP: Test Weather Tools",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python -c \"import asyncio; from server import get_alerts; print(asyncio.run(get_alerts('CA')))\""
-            ],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "panel": "shared",
+                "showReuseMessage": false
             }
         },
         {
-            "label": "Dev: Start Server (Auto-reload)",
+            "label": "Setup: Python Virtual Environment",
             "type": "shell",
-            "command": "bash",
+            "command": "python",
             "args": [
-                "-c",
-                "source .venv/bin/activate && uvicorn server:app --reload --host 0.0.0.0 --port 7070"
+                "-m",
+                "venv",
+                ".venv"
             ],
             "group": "build",
             "presentation": {
                 "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
+                "reveal": "silent"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "Test: All MCP Tools",
+            "label": "Setup: Install Dependencies",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "source .venv/bin/activate && python -c \"import asyncio; from server import get_alerts, get_forecast; print('Testing alerts:', asyncio.run(get_alerts('CA'))); print('Testing forecast:', asyncio.run(get_forecast(37.7749, -122.4194)))\""
-            ],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Lint: Python Code",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python -m py_compile server.py sequential_think_server.py"
-            ],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Validate: Environment Setup",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python -c \"import mcp, starlette, uvicorn, httpx; print('✓ All dependencies available'); print('Python:', __import__('sys').version)\""
-            ],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Database: Setup Sequential Think",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python setup_sequential_think.py"
+                "source .venv/bin/activate && pip install -e . && pip install pytest pytest-asyncio httpx watchdog psutil"
             ],
             "group": "build",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "silent"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Database: Sync Prompt Data",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "source .venv/bin/activate && python sync_prompt_data.py"
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
+                "cwd": "${workspaceFolder}"
             },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
+            "dependsOn": "Setup: Python Virtual Environment"
         },
         {
-            "label": "Database: Populate Prompts",
+            "label": "Setup: Initialize Database",
             "type": "shell",
             "command": "bash",
             "args": [
@@ -261,149 +70,357 @@
             "group": "build",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "silent"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Setup: Install Dependencies"
         },
         {
-            "label": "Database: Backup",
+            "label": "Setup: Validate Configuration",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "cp sequential_think_prompts.db sequential_think_prompts.backup.$(date +%Y%m%d_%H%M%S).db && echo 'Database backed up successfully'"
+                "source .venv/bin/activate && python -c \"from config_loader import load_config; print('✅ Configuration valid');\""
             ],
             "group": "build",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "silent"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Docker: Build Image",
-            "type": "shell",
-            "command": "docker",
-            "args": [
-                "build",
-                "-t",
-                "mcp-server-python",
-                "."
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
+                "cwd": "${workspaceFolder}"
             },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
+            "dependsOn": "Setup: Initialize Database"
         },
         {
-            "label": "Docker: Run Container (SSE)",
+            "label": "⚡ Sequential-Think: Start Server (stdio)",
             "type": "shell",
-            "command": "docker",
+            "command": "bash",
             "args": [
-                "run",
-                "-p",
-                "7070:7070",
-                "-p",
-                "7071:7071",
-                "mcp-server-python"
+                "-c",
+                "source .venv/bin/activate && python sequential_think_mcp_server.py --transport stdio"
             ],
             "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
+                "panel": "dedicated",
+                "clear": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "SEQUENTIAL_THINK_ENV": "development"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^ERROR:(.*)$",
+                    "file": 1,
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting Sequential Think MCP Server",
+                    "endsPattern": "Server ready"
+                }
+            }
+        },
+        {
+            "label": "🌐 Sequential-Think: Start Server (SSE Web)",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python sequential_think_mcp_server.py --transport sse --host 0.0.0.0 --port 7071"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "clear": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "SEQUENTIAL_THINK_ENV": "development"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^ERROR:(.*)$",
+                    "file": 1,
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting Sequential Think MCP Server",
+                    "endsPattern": "Server ready.*7071"
+                }
+            }
+        },
+        {
+            "label": "🔄 Development: Auto-restart Server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"import time; import subprocess; import os; from watchdog.observers import Observer; from watchdog.events import FileSystemEventHandler; class RestartHandler(FileSystemEventHandler): def __init__(self): self.process = None; self.restart(); def on_modified(self, event): if event.src_path.endswith('.py'): print(f'File changed: {event.src_path}'); self.restart(); def restart(self): if self.process: self.process.terminate(); self.process = subprocess.Popen(['python', 'sequential_think_mcp_server.py', '--transport', 'stdio']); print('Server restarted'); handler = RestartHandler(); observer = Observer(); observer.schedule(handler, '.', recursive=True); observer.start(); time.sleep(3600)\""
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true
+        },
+        {
+            "label": "🧪 TEST: Full Test Suite",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Test: Unit Tests",
+                "Test: Integration Tests",
+                "Test: Database Operations",
+                "Test: AI Services"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Test: Unit Tests",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -m pytest tests/ -v --tb=short"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*):(\\d+): (FAILED|ERROR) (.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }
+        },
+        {
+            "label": "Test: Integration Tests",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"import asyncio; from sequential_think_mcp_server import test_server_health; asyncio.run(test_server_health())\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Test: Database Operations",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"from core_utils import DatabasePool; db = DatabasePool('sequential_think_prompts.db'); print('✅ Database connection successful')\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Test: AI Services",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"from config_loader import load_config; config = load_config(); print('✅ AI services configuration loaded')\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🔄 Database: Sync Prompt Data",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python sync_prompt_data.py --force-sync"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
                 "panel": "new"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Docker: Production Build",
-            "type": "shell",
-            "command": "docker",
-            "args": [
-                "build",
-                "-f",
-                "Dockerfile.production",
-                "-t",
-                "mcp-server-python:production",
-                "."
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Docker: Deploy Quick",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "quick-deploy.sh"
-            ],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always"
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
-            }
-        },
-        {
-            "label": "Health: Check MCP Server",
+            "label": "📊 Database: Get Statistics",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "curl -f http://localhost:7070/health || echo 'Server not responding on port 7070'"
+                "source .venv/bin/activate && python -c \"import asyncio; import json; from sequential_think_mcp_server import EnhancedDatabaseManager; async def stats(): db = EnhancedDatabaseManager('sequential_think_prompts.db'); result = await db.get_database_stats(); print(json.dumps(result, indent=2)); asyncio.run(stats())\""
             ],
             "group": "test",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Health: Check Sequential-Think Server",
+            "label": "🔍 Database: Search Prompts Interactive",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "curl -f http://localhost:7071/health || echo 'Sequential-Think server not responding on port 7071'"
+                "read -p 'Enter search query: ' query && source .venv/bin/activate && python -c \"import asyncio; import sys; from sequential_think_mcp_server import EnhancedDatabaseManager; async def search(): db = EnhancedDatabaseManager('sequential_think_prompts.db'); results = await db.search_prompts('$query'); print(f'Found {len(results)} results:'); [print(f'- {r[\\\"title\\\"]} (Quality: {r[\\\"quality_score\\\"]})') for r in results[:10]]; asyncio.run(search())\""
             ],
             "group": "test",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Clean: Build Artifacts",
+            "label": "🤖 AI: Test Prompt Enhancement",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "rm -rf __pycache__ *.pyc *.pyo .pytest_cache build/ dist/ *.egg-info/ && echo 'Cleaned build artifacts'"
+                "read -p 'Enter prompt to enhance: ' prompt && source .venv/bin/activate && python -c \"import asyncio; from sequential_think_mcp_server import EnhancedAIServiceManager; async def enhance(): ai = EnhancedAIServiceManager(); result = await ai.enhance_prompt('$prompt'); print('Enhanced:', result); asyncio.run(enhance())\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🔧 Dev: Watch Configuration Changes",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"import time; from watchdog.observers import Observer; from watchdog.events import FileSystemEventHandler; class ConfigHandler(FileSystemEventHandler): def on_modified(self, event): print(f'Config changed: {event.src_path}'); observer = Observer(); observer.schedule(ConfigHandler(), '.', recursive=True); observer.start(); print('Watching for config changes...'); time.sleep(3600)\""
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true
+        },
+        {
+            "label": "📝 Config: Edit Configuration",
+            "type": "shell",
+            "command": "code",
+            "args": [
+                "${workspaceFolder}/config.yaml"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": false,
+                "reveal": "never"
+            }
+        },
+        {
+            "label": "🔒 Config: Validate Environment",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python -c \"import os; keys=['OPENAI_API_KEY', 'DEEPSEEK_API_KEY']; [print(f'{k}: {'✅ Set' if os.getenv(k) else '❌ Missing'}') for k in keys]\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "📦 Deploy: Create Distribution Package",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .venv/bin/activate && python setup.py sdist bdist_wheel"
             ],
             "group": "build",
             "presentation": {
@@ -411,16 +428,16 @@
                 "reveal": "always"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Clean: Reset Environment",
+            "label": "🚀 Deploy: Install Globally",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "rm -rf .venv && python -m venv .venv && source .venv/bin/activate && pip install -e . && echo 'Environment reset complete'"
+                "source .venv/bin/activate && pip install -e . && echo 'Sequential Think MCP Server installed globally'"
             ],
             "group": "build",
             "presentation": {
@@ -428,33 +445,54 @@
                 "reveal": "always"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Logs: View System Logs",
+            "label": "🔧 Debug: Server Health Check",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "find . -name '*.log' -exec echo '=== {} ===' \\; -exec tail -20 {} \\; 2>/dev/null || echo 'No log files found'"
+                "source .venv/bin/activate && timeout 10s python sequential_think_mcp_server.py --transport stdio < /dev/null || echo 'Server startup test complete'"
             ],
             "group": "test",
             "presentation": {
                 "echo": true,
-                "reveal": "always"
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "Export: Generate MCP Config",
+            "label": "📊 Monitor: Performance Metrics",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "echo '{\"mcpServers\":{\"weather-server\":{\"command\":\"python\",\"args\":[\"'$(pwd)'/server.py\"],\"cwd\":\"'$(pwd)'\",\"env\":{\"PATH\":\"'$(pwd)'/.venv/bin:/usr/bin:/bin\"}}}}' | python -m json.tool > claude_desktop_config.json && echo 'MCP config exported to claude_desktop_config.json'"
+                "source .venv/bin/activate && python -c \"import psutil; import os; print(f'CPU: {psutil.cpu_percent()}%'); print(f'Memory: {psutil.virtual_memory().percent}%'); print(f'Disk: {psutil.disk_usage(os.getcwd()).percent}%')\""
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🧹 Maintenance: Clean Build Artifacts",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "rm -rf build/ dist/ *.egg-info/ __pycache__/ .pytest_cache/ && echo 'Build artifacts cleaned'"
             ],
             "group": "build",
             "presentation": {
@@ -462,26 +500,62 @@
                 "reveal": "always"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         },
         {
-            "label": "AI: Quality Report",
+            "label": "📋 Logs: View Server Logs",
             "type": "shell",
             "command": "bash",
             "args": [
                 "-c",
-                "source .venv/bin/activate && python prompt_quality_improver.py && cat prompt_quality_report.md"
+                "tail -f logs/sequential_think_mcp.log 2>/dev/null || echo 'No log file found. Start server to generate logs.'"
             ],
             "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true
+        },
+        {
+            "label": "🏗️ CI: Complete Build Pipeline",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Test: Unit Tests",
+                "Test: Database Operations",
+                "🧹 Maintenance: Clean Build Artifacts",
+                "📦 Deploy: Create Distribution Package"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "📤 Export: Generate MCP Config",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "echo '{\"mcpServers\":{\"sequential-think-mcp\":{\"command\":\"python\",\"args\":[\"'$(pwd)'/sequential_think_mcp_server.py\"],\"cwd\":\"'$(pwd)'\",\"env\":{\"PATH\":\"'$(pwd)'/.venv/bin:/usr/bin:/bin\"}}}}' | python -m json.tool > claude_desktop_config.json && echo 'MCP config exported to claude_desktop_config.json'"
+            ],
+            "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always"
             },
             "options": {
-                "cwd": "${workspaceFolder}/mcp-server-python-template"
+                "cwd": "${workspaceFolder}"
             }
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

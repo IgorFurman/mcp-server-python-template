@@ -1,0 +1,29 @@
+#!/bin/bash
+# Sequential Think CLI wrapper
+# Usage: sequential-think-cli [command] [args...]
+
+SCRIPT_DIR="/home/slimmite/Dokumenty/mcp-server/mcp-server-python-template"
+VENV_PYTHON="$SCRIPT_DIR/.venv/bin/python"
+SERVER_SCRIPT="$SCRIPT_DIR/sequential_think_mcp_server.py"
+
+case "$1" in
+    "enhance")
+        echo '{"method": "tools/call", "params": {"name": "enhance_prompt", "arguments": {"prompt": "'"$2"'"}}}' | $VENV_PYTHON $SERVER_SCRIPT
+        ;;
+    "search")
+        echo '{"method": "tools/call", "params": {"name": "search_prompts", "arguments": {"query": "'"$2"'"}}}' | $VENV_PYTHON $SERVER_SCRIPT
+        ;;
+    "classify")
+        echo '{"method": "tools/call", "params": {"name": "classify_prompt", "arguments": {"prompt": "'"$2"'"}}}' | $VENV_PYTHON $SERVER_SCRIPT
+        ;;
+    "stats")
+        echo '{"method": "tools/call", "params": {"name": "get_database_stats", "arguments": {}}}' | $VENV_PYTHON $SERVER_SCRIPT
+        ;;
+    *)
+        echo "Usage: sequential-think-cli {enhance|search|classify|stats} [args...]"
+        echo "  enhance <prompt>  - Enhance a prompt"
+        echo "  search <query>    - Search prompts"
+        echo "  classify <prompt> - Classify prompt complexity"
+        echo "  stats             - Database statistics"
+        ;;
+esac

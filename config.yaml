@@ -1,0 +1,149 @@
+# Sequential Think MCP Server Configuration
+# High-performance configuration with optimized defaults
+
+# Database Configuration
+database:
+  path: "sequential_think_prompts.db"
+  pool_size: 10
+  timeout: 30.0
+  enable_wal: true
+  cache_size: 10000
+  
+  # Backup settings
+  backup_enabled: true
+  backup_interval: 3600  # 1 hour
+  max_backups: 24
+
+# AI Service Configuration  
+ai_services:
+  # OpenAI Configuration
+  openai:
+    enabled: true
+    api_key_env: "OPENAI_API_KEY"
+    base_url: "https://api.openai.com/v1"
+    default_model: "gpt-3.5-turbo"
+    timeout: 30.0
+    max_retries: 3
+    
+  # DeepSeek Configuration
+  deepseek:
+    enabled: true
+    api_key_env: "DEEPSEEK_API_KEY" 
+    base_url: "https://api.deepseek.com/v1"
+    default_model: "deepseek-coder"
+    timeout: 30.0
+    max_retries: 3
+
+# Local LLM Configuration
+ollama:
+  enabled: true
+  base_url: "http://localhost:11434"
+  timeout: 120.0
+  preferred_models:
+    - "llama3.2:1b"
+    - "llama3.2:3b"
+    - "codellama:7b"
+  
+  # Model management
+  auto_pull: false
+  health_check_interval: 60
+
+# Performance Configuration
+performance:
+  # Caching
+  cache_enabled: true
+  cache_ttl: 300  # 5 minutes
+  cache_max_size: 1000
+  
+  # Rate limiting
+  rate_limit_enabled: false
+  requests_per_minute: 60
+  
+  # Results
+  max_results_per_query: 100
+  default_limit: 10
+  
+  # Connection pooling
+  http_pool_connections: 10
+  http_pool_maxsize: 100
+
+# Server Configuration
+server:
+  # Modes
+  default_transport: "stdio"
+  sse_host: "0.0.0.0"
+  sse_port: 7071
+  
+  # Security
+  enable_cors: false
+  cors_origins: ["http://localhost:3000"]
+  
+  # Monitoring
+  enable_metrics: true
+  health_check_path: "/health"
+  metrics_path: "/metrics"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  enable_file_logging: true
+  log_file: "sequential_think_server.log"
+  log_rotation_size: "10MB"
+  log_retention_count: 5
+  
+  # Performance logging
+  log_slow_queries: true
+  slow_query_threshold: 1.0
+  log_performance_metrics: true
+
+# Features Configuration
+features:
+  # Sequential Think CLI Integration
+  sequential_think_cli:
+    enabled: true
+    path: "sequential-think/ai/cli.ts"
+    timeout: 60.0
+    max_thoughts: 20
+  
+  # Prompt Enhancement
+  prompt_enhancement:
+    enabled: true
+    auto_store_results: true
+    enable_keyword_extraction: true
+    quality_threshold: 0.7
+  
+  # Search & Recommendations
+  search:
+    enable_fts: true
+    enable_similarity: true
+    similarity_threshold: 0.7
+    enable_autocomplete: false
+
+# Data Management
+data_management:
+  # Sync settings
+  auto_sync_enabled: false
+  sync_interval: 3600  # 1 hour
+  
+  # Quality improvement
+  auto_quality_improvement: false
+  quality_check_interval: 86400  # 24 hours
+  
+  # Export settings
+  auto_export_enabled: false
+  export_formats: ["json", "markdown"]
+  export_schedule: "daily"
+
+# Development & Debug
+development:
+  debug_mode: false
+  enable_profiling: false
+  mock_ai_services: false
+  disable_cache_in_debug: true
+  
+  # Test data
+  load_test_data: false
+  test_data_path: "test_data/"

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sequential-think": {
+      "command": "python",
+      "args": ["/home/slimmite/Dokumenty/mcp-server/mcp-server-python-template/sequential_think_mcp_server.py"],
+      "cwd": "/home/slimmite/Dokumenty/mcp-server/mcp-server-python-template",
+      "env": {
+        "PATH": "/home/slimmite/Dokumenty/mcp-server/mcp-server-python-template/.venv/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
