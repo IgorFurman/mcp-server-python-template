@@ -9,41 +9,181 @@ class SystemPromptAnalyzer {
   constructor() {
     this.tokenizer = new natural.WordTokenizer();
     this.stemmer = natural.PorterStemmer;
-    
+
     // Define prompt component categories and their keywords
     this.categories = {
       personality: {
-        keywords: ['friendly', 'helpful', 'professional', 'casual', 'formal', 'empathetic', 'curious', 'patient', 'direct', 'conversational', 'warm', 'engaging'],
-        patterns: [/personality/i, /tone/i, /character/i, /persona/i, /behave/i]
+        keywords: [
+          "friendly",
+          "helpful",
+          "professional",
+          "casual",
+          "formal",
+          "empathetic",
+          "curious",
+          "patient",
+          "direct",
+          "conversational",
+          "warm",
+          "engaging",
+        ],
+        patterns: [
+          /personality/i,
+          /tone/i,
+          /character/i,
+          /persona/i,
+          /behave/i,
+        ],
       },
       capabilities: {
-        keywords: ['can', 'able', 'capable', 'skills', 'functions', 'features', 'tools', 'analyze', 'generate', 'create', 'process', 'understand'],
-        patterns: [/can do/i, /able to/i, /capabilities/i, /functions/i, /features/i]
+        keywords: [
+          "can",
+          "able",
+          "capable",
+          "skills",
+          "functions",
+          "features",
+          "tools",
+          "analyze",
+          "generate",
+          "create",
+          "process",
+          "understand",
+        ],
+        patterns: [
+          /can do/i,
+          /able to/i,
+          /capabilities/i,
+          /functions/i,
+          /features/i,
+        ],
       },
       limitations: {
-        keywords: ['cannot', 'unable', 'limit', 'restriction', 'avoid', 'refrain', 'prevent', 'prohibited', 'forbidden', 'not allowed'],
-        patterns: [/cannot/i, /unable to/i, /limitations/i, /restrictions/i, /not.*able/i]
+        keywords: [
+          "cannot",
+          "unable",
+          "limit",
+          "restriction",
+          "avoid",
+          "refrain",
+          "prevent",
+          "prohibited",
+          "forbidden",
+          "not allowed",
+        ],
+        patterns: [
+          /cannot/i,
+          /unable to/i,
+          /limitations/i,
+          /restrictions/i,
+          /not.*able/i,
+        ],
       },
       safety: {
-        keywords: ['safe', 'harmful', 'dangerous', 'inappropriate', 'offensive', 'toxic', 'abuse', 'violence', 'illegal', 'unethical'],
-        patterns: [/safety/i, /harmful/i, /dangerous/i, /inappropriate/i, /guidelines/i, /policy/i]
+        keywords: [
+          "safe",
+          "harmful",
+          "dangerous",
+          "inappropriate",
+          "offensive",
+          "toxic",
+          "abuse",
+          "violence",
+          "illegal",
+          "unethical",
+        ],
+        patterns: [
+          /safety/i,
+          /harmful/i,
+          /dangerous/i,
+          /inappropriate/i,
+          /guidelines/i,
+          /policy/i,
+        ],
       },
       interaction_style: {
-        keywords: ['respond', 'answer', 'reply', 'communicate', 'engage', 'conversation', 'dialogue', 'ask', 'question', 'follow-up'],
-        patterns: [/when.*ask/i, /should.*respond/i, /interaction/i, /communication/i, /conversation/i]
+        keywords: [
+          "respond",
+          "answer",
+          "reply",
+          "communicate",
+          "engage",
+          "conversation",
+          "dialogue",
+          "ask",
+          "question",
+          "follow-up",
+        ],
+        patterns: [
+          /when.*ask/i,
+          /should.*respond/i,
+          /interaction/i,
+          /communication/i,
+          /conversation/i,
+        ],
       },
       knowledge: {
-        keywords: ['know', 'knowledge', 'information', 'data', 'facts', 'cutoff', 'training', 'learned', 'database', 'search'],
-        patterns: [/knowledge/i, /cutoff/i, /training.*data/i, /information/i, /database/i]
+        keywords: [
+          "know",
+          "knowledge",
+          "information",
+          "data",
+          "facts",
+          "cutoff",
+          "training",
+          "learned",
+          "database",
+          "search",
+        ],
+        patterns: [
+          /knowledge/i,
+          /cutoff/i,
+          /training.*data/i,
+          /information/i,
+          /database/i,
+        ],
       },
       formatting: {
-        keywords: ['format', 'structure', 'markdown', 'code', 'list', 'bullet', 'heading', 'paragraph', 'citation'],
-        patterns: [/format/i, /markdown/i, /structure/i, /code.*block/i, /citation/i]
+        keywords: [
+          "format",
+          "structure",
+          "markdown",
+          "code",
+          "list",
+          "bullet",
+          "heading",
+          "paragraph",
+          "citation",
+        ],
+        patterns: [
+          /format/i,
+          /markdown/i,
+          /structure/i,
+          /code.*block/i,
+          /citation/i,
+        ],
       },
       identity: {
-        keywords: ['assistant', 'ai', 'model', 'created', 'developed', 'anthropic', 'openai', 'claude', 'gpt', 'chatbot'],
-        patterns: [/i am/i, /created by/i, /developed by/i, /assistant/i, /model/i]
-      }
+        keywords: [
+          "assistant",
+          "ai",
+          "model",
+          "created",
+          "developed",
+          "anthropic",
+          "openai",
+          "claude",
+          "gpt",
+          "chatbot",
+        ],
+        patterns: [
+          /i am/i,
+          /created by/i,
+          /developed by/i,
+          /assistant/i,
+          /model/i,
+        ],
+      },
     };
   }
 
@@ -54,10 +194,10 @@ class SystemPromptAnalyzer {
    */
   analyzePrompts(prompts) {
     const results = {
-      individual: prompts.map(prompt => this.analyzePrompt(prompt)),
+      individual: prompts.map((prompt) => this.analyzePrompt(prompt)),
       aggregate: this.aggregateAnalysis(prompts),
       patterns: this.findPatterns(prompts),
-      evolution: this.analyzeEvolution(prompts)
+      evolution: this.analyzeEvolution(prompts),
     };
 
     return results;
@@ -72,7 +212,7 @@ class SystemPromptAnalyzer {
     if (!prompt.systemPrompt) {
       return {
         filename: prompt.filename,
-        error: 'No system prompt content found'
+        error: "No system prompt content found",
       };
     }
 
@@ -91,7 +231,7 @@ class SystemPromptAnalyzer {
       complexity: this.analyzeComplexity(text, tokens),
       directives: this.extractDirectives(sentences),
       keyPhrases: this.extractKeyPhrases(tokens),
-      structure: this.analyzeStructure(prompt.systemPrompt)
+      structure: this.analyzeStructure(prompt.systemPrompt),
     };
   }
 
@@ -128,9 +268,13 @@ class SystemPromptAnalyzer {
       // Find relevant sentences
       for (const sentence of sentences) {
         const sentenceLower = sentence.toLowerCase();
-        const hasKeyword = config.keywords.some(kw => sentenceLower.includes(kw));
-        const hasPattern = config.patterns.some(pattern => pattern.test(sentence));
-        
+        const hasKeyword = config.keywords.some((kw) =>
+          sentenceLower.includes(kw)
+        );
+        const hasPattern = config.patterns.some((pattern) =>
+          pattern.test(sentence)
+        );
+
         if (hasKeyword || hasPattern) {
           matchedSentences.push(sentence.trim());
         }
@@ -140,7 +284,7 @@ class SystemPromptAnalyzer {
         score,
         relevance: score > 0 ? Math.min(score / 5, 1) : 0, // Normalize to 0-1
         keywords: matchedKeywords,
-        sentences: matchedSentences.slice(0, 3) // Top 3 relevant sentences
+        sentences: matchedSentences.slice(0, 3), // Top 3 relevant sentences
       };
     }
 
@@ -155,8 +299,8 @@ class SystemPromptAnalyzer {
   extractSentences(text) {
     return text
       .split(/[.!?]+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 10); // Filter out very short fragments
+      .map((s) => s.trim())
+      .filter((s) => s.length > 10); // Filter out very short fragments
   }
 
   /**
@@ -165,14 +309,18 @@ class SystemPromptAnalyzer {
    * @returns {Object} Sentiment analysis
    */
   analyzeSentiment(text) {
-    const analyzer = new natural.SentimentAnalyzer('English', 
-      natural.PorterStemmer, 'afinn');
+    const analyzer = new natural.SentimentAnalyzer(
+      "English",
+      natural.PorterStemmer,
+      "afinn"
+    );
     const tokens = this.tokenizer.tokenize(text);
     const score = analyzer.getSentiment(tokens);
 
     return {
       score,
-      classification: score > 0.1 ? 'positive' : score < -0.1 ? 'negative' : 'neutral'
+      classification:
+        score > 0.1 ? "positive" : score < -0.1 ? "negative" : "neutral",
     };
   }
 
@@ -184,15 +332,21 @@ class SystemPromptAnalyzer {
    */
   analyzeComplexity(text, tokens) {
     const sentences = this.extractSentences(text);
-    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(' ').length, 0) / sentences.length;
-    const uniqueWords = new Set(tokens.map(t => this.stemmer.stem(t))).size;
+    const avgSentenceLength =
+      sentences.reduce((sum, s) => sum + s.split(" ").length, 0) /
+      sentences.length;
+    const uniqueWords = new Set(tokens.map((t) => this.stemmer.stem(t))).size;
     const lexicalDiversity = uniqueWords / tokens.length;
 
     return {
       avgSentenceLength: Math.round(avgSentenceLength),
       lexicalDiversity: Math.round(lexicalDiversity * 100) / 100,
-      complexity: avgSentenceLength > 20 || lexicalDiversity > 0.7 ? 'high' : 
-                 avgSentenceLength > 15 || lexicalDiversity > 0.5 ? 'medium' : 'low'
+      complexity:
+        avgSentenceLength > 20 || lexicalDiversity > 0.7
+          ? "high"
+          : avgSentenceLength > 15 || lexicalDiversity > 0.5
+          ? "medium"
+          : "low",
     };
   }
 
@@ -205,12 +359,12 @@ class SystemPromptAnalyzer {
     const directivePatterns = [
       /^(always|never|should|must|will|when|if)/i,
       /(do not|don't|avoid|ensure|make sure)/i,
-      /(respond|answer|provide|generate|create)/i
+      /(respond|answer|provide|generate|create)/i,
     ];
 
     return sentences
-      .filter(sentence => 
-        directivePatterns.some(pattern => pattern.test(sentence))
+      .filter((sentence) =>
+        directivePatterns.some((pattern) => pattern.test(sentence))
       )
       .slice(0, 10); // Top 10 directives
   }
@@ -225,14 +379,18 @@ class SystemPromptAnalyzer {
     tfidf.addDocument(tokens);
 
     const phrases = [];
-    tfidf.listTerms(0).slice(0, 20).forEach(item => {
-      if (item.term.length > 3) { // Filter out very short terms
-        phrases.push({
-          term: item.term,
-          score: Math.round(item.tfidf * 100) / 100
-        });
-      }
-    });
+    tfidf
+      .listTerms(0)
+      .slice(0, 20)
+      .forEach((item) => {
+        if (item.term.length > 3) {
+          // Filter out very short terms
+          phrases.push({
+            term: item.term,
+            score: Math.round(item.tfidf * 100) / 100,
+          });
+        }
+      });
 
     return phrases;
   }
@@ -243,10 +401,14 @@ class SystemPromptAnalyzer {
    * @returns {Object} Structure analysis
    */
   analyzeStructure(text) {
-    const lines = text.split('\n');
-    const bulletPoints = lines.filter(line => line.trim().match(/^[-*•]/)).length;
-    const numberedLists = lines.filter(line => line.trim().match(/^\d+\./)).length;
-    const headings = lines.filter(line => line.trim().match(/^#+/)).length;
+    const lines = text.split("\n");
+    const bulletPoints = lines.filter((line) =>
+      line.trim().match(/^[-*•]/)
+    ).length;
+    const numberedLists = lines.filter((line) =>
+      line.trim().match(/^\d+\./)
+    ).length;
+    const headings = lines.filter((line) => line.trim().match(/^#+/)).length;
     const paragraphs = text.split(/\n\s*\n/).length;
 
     return {
@@ -255,7 +417,7 @@ class SystemPromptAnalyzer {
       numberedLists,
       headings,
       paragraphs,
-      hasStructure: bulletPoints > 0 || numberedLists > 0 || headings > 0
+      hasStructure: bulletPoints > 0 || numberedLists > 0 || headings > 0,
     };
   }
 
@@ -265,21 +427,21 @@ class SystemPromptAnalyzer {
    * @returns {Object} Aggregate analysis
    */
   aggregateAnalysis(prompts) {
-    const validPrompts = prompts.filter(p => p.systemPrompt);
-    
+    const validPrompts = prompts.filter((p) => p.systemPrompt);
+
     const categoryScores = {};
     const services = {};
     const totalWords = validPrompts.reduce((sum, p) => sum + p.wordCount, 0);
 
     // Initialize category aggregation
-    Object.keys(this.categories).forEach(cat => {
+    Object.keys(this.categories).forEach((cat) => {
       categoryScores[cat] = { total: 0, count: 0, prompts: [] };
     });
 
     // Analyze each prompt and aggregate
-    validPrompts.forEach(prompt => {
+    validPrompts.forEach((prompt) => {
       const analysis = this.analyzePrompt(prompt);
-      
+
       // Aggregate by service
       const service = prompt.metadata.service;
       if (!services[service]) {
@@ -304,9 +466,13 @@ class SystemPromptAnalyzer {
     });
 
     // Calculate averages
-    Object.keys(categoryScores).forEach(cat => {
-      categoryScores[cat].average = categoryScores[cat].count > 0 ? 
-        Math.round((categoryScores[cat].total / categoryScores[cat].count) * 100) / 100 : 0;
+    Object.keys(categoryScores).forEach((cat) => {
+      categoryScores[cat].average =
+        categoryScores[cat].count > 0
+          ? Math.round(
+              (categoryScores[cat].total / categoryScores[cat].count) * 100
+            ) / 100
+          : 0;
     });
 
     return {
@@ -314,7 +480,7 @@ class SystemPromptAnalyzer {
       totalWords,
       avgWordsPerPrompt: Math.round(totalWords / validPrompts.length),
       categoryScores,
-      serviceBreakdown: services
+      serviceBreakdown: services,
     };
   }
 
@@ -324,23 +490,24 @@ class SystemPromptAnalyzer {
    * @returns {Object} Pattern analysis
    */
   findPatterns(prompts) {
-    const validPrompts = prompts.filter(p => p.systemPrompt);
+    const validPrompts = prompts.filter((p) => p.systemPrompt);
     const commonPhrases = new Map();
     const commonDirectives = new Map();
 
-    validPrompts.forEach(prompt => {
+    validPrompts.forEach((prompt) => {
       const analysis = this.analyzePrompt(prompt);
-      
+
       // Track common key phrases
-      analysis.keyPhrases.forEach(phrase => {
+      analysis.keyPhrases.forEach((phrase) => {
         const key = phrase.term;
         commonPhrases.set(key, (commonPhrases.get(key) || 0) + 1);
       });
 
       // Track common directives
-      analysis.directives.forEach(directive => {
+      analysis.directives.forEach((directive) => {
         const key = directive.toLowerCase().trim();
-        if (key.length > 20) { // Only track substantial directives
+        if (key.length > 20) {
+          // Only track substantial directives
           commonDirectives.set(key, (commonDirectives.get(key) || 0) + 1);
         }
       });
@@ -359,7 +526,7 @@ class SystemPromptAnalyzer {
 
     return {
       commonPhrases: topPhrases,
-      commonDirectives: topDirectives
+      commonDirectives: topDirectives,
     };
   }
 
@@ -370,26 +537,26 @@ class SystemPromptAnalyzer {
    */
   analyzeEvolution(prompts) {
     const datedPrompts = prompts
-      .filter(p => p.metadata.date && p.systemPrompt)
+      .filter((p) => p.metadata.date && p.systemPrompt)
       .sort((a, b) => a.metadata.date - b.metadata.date);
 
     if (datedPrompts.length < 2) {
-      return { error: 'Insufficient dated prompts for evolution analysis' };
+      return { error: "Insufficient dated prompts for evolution analysis" };
     }
 
     const evolution = {
       timespan: {
         start: datedPrompts[0].metadata.date,
-        end: datedPrompts[datedPrompts.length - 1].metadata.date
+        end: datedPrompts[datedPrompts.length - 1].metadata.date,
       },
       trends: {},
-      wordCountTrend: this.analyzeTrend(datedPrompts.map(p => p.wordCount)),
-      serviceEvolution: {}
+      wordCountTrend: this.analyzeTrend(datedPrompts.map((p) => p.wordCount)),
+      serviceEvolution: {},
     };
 
     // Analyze category trends over time
-    Object.keys(this.categories).forEach(category => {
-      const scores = datedPrompts.map(prompt => {
+    Object.keys(this.categories).forEach((category) => {
+      const scores = datedPrompts.map((prompt) => {
         const analysis = this.analyzePrompt(prompt);
         return analysis.categories[category].score;
       });
@@ -405,18 +572,27 @@ class SystemPromptAnalyzer {
    * @returns {Object} Trend analysis
    */
   analyzeTrend(values) {
-    if (values.length < 2) return { trend: 'insufficient_data' };
+    if (values.length < 2) return { trend: "insufficient_data" };
 
-    const first = values.slice(0, Math.ceil(values.length / 3)).reduce((a, b) => a + b, 0) / Math.ceil(values.length / 3);
-    const last = values.slice(-Math.ceil(values.length / 3)).reduce((a, b) => a + b, 0) / Math.ceil(values.length / 3);
-    
+    const first =
+      values.slice(0, Math.ceil(values.length / 3)).reduce((a, b) => a + b, 0) /
+      Math.ceil(values.length / 3);
+    const last =
+      values.slice(-Math.ceil(values.length / 3)).reduce((a, b) => a + b, 0) /
+      Math.ceil(values.length / 3);
+
     const change = ((last - first) / first) * 100;
-    
+
     return {
-      trend: Math.abs(change) < 5 ? 'stable' : change > 0 ? 'increasing' : 'decreasing',
+      trend:
+        Math.abs(change) < 5
+          ? "stable"
+          : change > 0
+          ? "increasing"
+          : "decreasing",
       changePercent: Math.round(change * 100) / 100,
       firstThirdAvg: Math.round(first * 100) / 100,
-      lastThirdAvg: Math.round(last * 100) / 100
+      lastThirdAvg: Math.round(last * 100) / 100,
     };
   }
 }
@@ -428,45 +604,60 @@ if (require.main === module) {
   async function runAnalysis() {
     try {
       // Parse prompts first
-      const parser = new SystemPromptParser(__dirname + '/..');
+      const parser = new SystemPromptParser(__dirname + "/..");
       const prompts = await parser.parseAll();
-      
+
       console.log(`\nAnalyzing ${prompts.length} system prompts...`);
-      
+
       // Analyze prompts
       const analyzer = new SystemPromptAnalyzer();
       const analysis = analyzer.analyzePrompts(prompts);
-      
+
       // Create data directory
-      await fs.ensureDir(__dirname + '/../data');
-      
+      await fs.ensureDir(__dirname + "/../data");
+
       // Save analysis results
-      await fs.writeJson(__dirname + '/../data/analysis-results.json', analysis, { spaces: 2 });
-      
-      console.log('\nAnalysis Summary:');
-      console.log('================');
+      await fs.writeJson(
+        __dirname + "/../data/analysis-results.json",
+        analysis,
+        { spaces: 2 }
+      );
+
+      console.log("\nAnalysis Summary:");
+      console.log("================");
       console.log(`Total Prompts Analyzed: ${analysis.aggregate.totalPrompts}`);
       console.log(`Total Words: ${analysis.aggregate.totalWords}`);
-      console.log(`Average Words per Prompt: ${analysis.aggregate.avgWordsPerPrompt}`);
-      
-      console.log('\nTop Categories by Average Score:');
+      console.log(
+        `Average Words per Prompt: ${analysis.aggregate.avgWordsPerPrompt}`
+      );
+
+      console.log("\nTop Categories by Average Score:");
       const sortedCategories = Object.entries(analysis.aggregate.categoryScores)
         .sort((a, b) => b[1].average - a[1].average)
         .slice(0, 5);
-      
+
       sortedCategories.forEach(([category, data]) => {
-        console.log(`  ${category}: ${data.average} (found in ${data.prompts.length} prompts)`);
+        console.log(
+          `  ${category}: ${data.average} (found in ${data.prompts.length} prompts)`
+        );
       });
-      
-      console.log('\nService Breakdown:');
-      Object.entries(analysis.aggregate.serviceBreakdown).forEach(([service, data]) => {
-        console.log(`  ${service}: ${data.count} prompts, avg ${Math.round(data.totalWords / data.count)} words`);
-      });
-      
-      console.log('\nAnalysis complete! Results saved to data/analysis-results.json');
-      
+
+      console.log("\nService Breakdown:");
+      Object.entries(analysis.aggregate.serviceBreakdown).forEach(
+        ([service, data]) => {
+          console.log(
+            `  ${service}: ${data.count} prompts, avg ${Math.round(
+              data.totalWords / data.count
+            )} words`
+          );
+        }
+      );
+
+      console.log(
+        "\nAnalysis complete! Results saved to data/analysis-results.json"
+      );
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error("Analysis failed:", error);
     }
   }
 
