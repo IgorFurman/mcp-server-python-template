@@ -23,7 +23,7 @@ This is a documentation repository containing leaked system prompts from various
 ### File Format
 System prompt files typically follow this structure:
 1. Title with service and date
-2. Source citation 
+2. Source citation
 3. System prompt content (often in "System Prompt" section)
 4. Additional context or examples as needed
 
