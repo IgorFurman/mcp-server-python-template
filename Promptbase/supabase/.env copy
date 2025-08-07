@@ -1,0 +1,11 @@
+# Supabase Configuration
+SUPABASE_URL=https://mvajognrlmunncwvelwn.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWpvZ25ybG11bm5jd3ZlbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwNjU0NDksImV4cCI6MjA2OTY0MTQ0OX0.GoN2BDUT933tM6zMxHOGZczmaZFkSEHKQ6_5_ESBr5M
+
+# For frontend applications (if using Next.js/React)
+NEXT_PUBLIC_SUPABASE_URL=https://mvajognrlmunncwvelwn.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWpvZ25ybG11bm5jd3ZlbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwNjU0NDksImV4cCI6MjA2OTY0MTQ0OX0.GoN2BDUT933tM6zMxHOGZczmaZFkSEHKQ6_5_ESBr5M
+
+# Note: You'll need to add your service role key for admin operations
+# Get it from: Supabase Dashboard > Settings > API > service_role key
+# SUPABASE_SERVICE_KEY=your-service-role-key-here

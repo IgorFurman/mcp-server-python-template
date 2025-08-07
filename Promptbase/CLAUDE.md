@@ -1,0 +1,372 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Table of Contents
+
+- [Repository Overview](#repository-overview)
+- [Project Structure](#project-structure)
+- [Development Commands](#development-commands)
+- [Key File Formats](#key-file-formats)
+- [Architecture Notes](#architecture-notes)
+- [MCP Client Configuration](#mcp-client-configuration)
+- [Contribution Guidelines](#contribution-guidelines)
+- [Important Constraints](#important-constraints)
+- [Common Tasks](#common-tasks)
+
+## Repository Overview
+
+This repository serves dual purposes:
+
+1. **Main collection**: A curated collection of awesome ChatGPT prompts for various AI models, hosted as a Jekyll site
+2. **Analysis toolkit**: A Node.js-based system for analyzing and researching AI system prompts (located in `base/` directory)
+
+## Project Structure
+
+### Main Repository (Jekyll Site)
+
+- **Root level**: Jekyll-based static site with prompt collections
+- **`prompts.csv`**: Main database of prompts in CSV format
+- **`README.md`**: Main documentation with all prompts
+- **`_layouts/`**: Jekyll layout templates
+- **`embed-*.html`**: Embeddable versions of prompts
+- **`scripts/find-prompt`**: Bash script for searching prompts using fzf
+
+### Analysis Toolkit (`base/` directory)
+
+- **`src/`**: Node.js analysis tools for system prompts
+- **Individual `.md` files**: System prompts from various AI services
+- **`data/`**: Analysis results and parsed data
+- **Naming convention**: `service-name_model_YYYYMMDD.md`
+
+## Development Commands
+
+### Jekyll Site (Main Repository)
+
+```bash
+# Install Ruby dependencies
+bundle install
+
+# Run development server
+bundle exec jekyll serve
+
+# Build for production
+bundle exec jekyll build
+```
+
+### Analysis Toolkit (base/ directory)
+
+```bash
+cd base/
+
+# Install Node.js dependencies
+npm install
+
+# Run main analysis
+npm start
+npm run analyze
+npm run parse
+
+# Development with auto-reload
+npm run dev
+
+# Run tests
+npm test
+```
+
+### Utility Scripts
+
+```bash
+# Search prompts interactively (requires fzf, ruby, curl)
+./scripts/find-prompt [search-term]
+```
+
+## Key File Formats
+
+### Prompt Contributions
+
+When adding new prompts, follow this format in README.md:
+
+```markdown
+## Prompt Title
+
+Contributed by: [@username](https://github.com/username)
+
+> prompt content here
+```
+
+And add to `prompts.csv`:
+
+```csv
+"Act Title","prompt content with escaped quotes ""like this"""
+```
+
+### System Prompt Files (base/ directory)
+
+Files should follow the naming convention: `service-name_model_YYYYMMDD.md`
+
+Example structure:
+
+```markdown
+# Service Name Model - Date
+
+## Source
+
+[Verification method or reproducible source]
+
+## System Prompt
+
+[The actual system prompt content]
+```
+
+## Architecture Notes
+
+### Jekyll Configuration
+
+- Site configured in `_config.yml`
+- Uses GitHub Pages for hosting
+- Custom layouts for embedding prompts
+- Static site generation with liquid templating
+
+### Node.js Analysis Tools
+
+- **`src/analyzer.js`**: Analyzes system prompt patterns
+- **`src/parser.js`**: Parses prompt files into structured data
+- **`src/comparator.js`**: Compares different system prompts
+- **`src/enhancer.js`**: Enhances prompt analysis
+
+### Embedding System
+
+- Multiple embed formats: `embed.html`, `embed-preview.html`
+- JavaScript and CSS for interactive prompt browsing
+- Integration with prompts.chat website
+
+## MCP Client Configuration
+
+### Sequential Think Server - SSE Transport Configuration
+
+This section covers integration with the Model Context Protocol (MCP) Sequential Think Server for enhanced AI reasoning capabilities.
+
+#### Claude Desktop Configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "sequential-think-server": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-p",
+        "7071:7071",
+        "igorfurman/mcp-sequential-think:latest",
+        "python",
+        "sequential_think_server.py",
+        "--transport",
+        "sse",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "7071"
+      ],
+      "env": {
+        "MCP_TRANSPORT": "sse"
+      }
+    }
+  }
+}
+```
+
+#### Direct SSE Connection
+
+For direct SSE connections, use:
+
+**Base URL**: `http://localhost:7071`
+
+**Endpoints**:
+
+- **Root**: `GET /` - Server info and available endpoints
+- **Health**: `GET /health` - Health check for monitoring
+- **SSE**: `/sse` - Main MCP SSE endpoint
+- **Messages**: `POST /messages/` - Message handling
+
+#### Testing the Server
+
+```bash
+# 1. Check server status
+curl http://localhost:7071/
+
+# 2. Health check
+curl http://localhost:7071/health
+
+# 3. Test SSE connection (requires MCP client)
+# Connect to: http://localhost:7071/sse
+```
+
+#### Expected Responses
+
+**Root endpoint (`/`)**:
+
+```json
+{
+  "service": "Sequential Think MCP Server",
+  "version": "1.0.0",
+  "status": "running",
+  "endpoints": {
+    "sse": "/sse",
+    "messages": "/messages/",
+    "health": "/health"
+  },
+  "transport": "sse"
+}
+```
+
+**Health endpoint (`/health`)**:
+
+```json
+{
+  "status": "healthy",
+  "database": "ok",
+  "service": "Sequential Think MCP Server"
+}
+```
+
+#### MCP Configuration
+
+### Sequential Think Server Configuration
+
+The Sequential Think Server is configured to use the Model Context Protocol (MCP) with SSE transport. Below are the configuration details:
+
+#### Environment Variables
+
+Set the following environment variables for the server:
+
+```bash
+export MCP_TRANSPORT=sse
+export MCP_HOST=0.0.0.0
+export MCP_PORT=7071
+```
+
+#### Docker Deployment
+
+Run the server using Docker:
+
+```bash
+docker run -p 7071:7071 igorfurman/mcp-sequential-think:latest
+```
+
+Or use Docker Compose:
+
+```yaml
+version: "3.8"
+services:
+  sequential-think-server:
+    image: igorfurman/mcp-sequential-think:latest
+    ports:
+      - "7071:7071"
+    environment:
+      MCP_TRANSPORT: sse
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 7071
+```
+
+Start the server:
+
+```bash
+docker-compose up -d sequential-think-server
+```
+
+#### Endpoints
+
+- **Root**: `GET /` - Provides server information and available endpoints.
+- **Health**: `GET /health` - Health check endpoint.
+- **SSE**: `GET /sse` - Main SSE endpoint for MCP.
+- **Messages**: `POST /messages/` - Endpoint for handling messages.
+
+#### Testing the Server
+
+```bash
+# Check server status
+curl http://localhost:7071/
+
+# Health check
+curl http://localhost:7071/health
+
+# Test SSE connection
+curl -N http://localhost:7071/sse
+```
+
+#### Example Response
+
+**Root Endpoint (`/`)**:
+
+```json
+{
+  "service": "Sequential Think MCP Server",
+  "version": "1.0.0",
+  "status": "running",
+  "endpoints": {
+    "sse": "/sse",
+    "messages": "/messages/",
+    "health": "/health"
+  },
+  "transport": "sse"
+}
+```
+
+**Health Endpoint (`/health`)**:
+
+```json
+{
+  "status": "healthy",
+  "database": "ok",
+  "service": "Sequential Think MCP Server"
+}
+```
+
+#### Troubleshooting
+
+1. **404 Errors**: Verify the endpoint paths.
+2. **Connection Refused**: Ensure the server is running and the port is exposed.
+3. **Health Check Fails**: Confirm the `/health` endpoint is accessible.
+4. **SSE Issues**: Check that the client connects to `/sse` with the correct transport.
+
+## Contribution Guidelines
+
+### Adding New Prompts
+
+1. Test the prompt thoroughly
+2. Add to both `README.md` and `prompts.csv`
+3. Follow the established format exactly
+4. Include proper attribution
+5. Escape quotes in CSV as `""`
+
+### Adding System Prompts (base/ directory)
+
+1. Verify the source is reproducible
+2. Follow naming convention: `service-name_model_YYYYMMDD.md`
+3. Include source verification
+4. Maintain accuracy for academic citations
+
+### File Modifications
+
+- **CSV format**: No spaces after commas in headers
+- **Markdown**: Use consistent formatting
+- **Source verification**: Always include for system prompts
+
+## Important Constraints
+
+- This is a documentation repository - avoid adding executable code beyond analysis tools
+- System prompts must be verifiable and from legitimate sources
+- Commercial source code should not be included to prevent DMCA issues
+- Content should be educational/research-focused only
+- The repository is cited in academic papers, so accuracy is crucial
+
+## Common Tasks
+
+- **Search prompts**: Use `./scripts/find-prompt` or browse `prompts.csv`
+- **Add new prompt**: Edit both `README.md` and `prompts.csv`
+- **Analyze system prompts**: Use Node.js tools in `base/` directory
+- **Build site**: Run Jekyll commands for static site generation
+- **Embed prompts**: Use provided embed templates and scripts

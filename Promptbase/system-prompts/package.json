@@ -1,0 +1,33 @@
+{
+  "name": "system-prompt-analyzer",
+  "version": "1.0.0",
+  "description": "Analysis and research toolkit for AI system prompts",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "analyze": "node src/analyzer.js",
+    "parse": "node src/parser.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "ai",
+    "system-prompts",
+    "analysis",
+    "research",
+    "llm"
+  ],
+  "author": "System Prompt Research",
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "natural": "^6.12.0",
+    "commander": "^12.0.0",
+    "yaml": "^2.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "jest": "^29.7.0"
+  }
+}

@@ -1,0 +1,433 @@
+app,category,prompt,contributor,techstack,difficulty
+"Multiplayer 3D Plane Game","Game","Create an immersive multiplayer airplane combat game:
+• Implement 3D airplane models with realistic flight physics (pitch, yaw, roll, throttle)
+• Add configurable camera views (cockpit, chase, orbital) with smooth transitions
+• Create dynamic skybox with time-of-day and weather effects
+• Build real-time multiplayer using WebSockets with client-side prediction
+• Implement weapons systems with projectile physics and damage models
+• Add particle effects for engine exhaust, weapons, and explosions
+• Create HUD showing speed, altitude, heading, radar, and health
+• Implement 3D spatial audio for engines, weapons, and environment
+• Add match types (deathmatch, team battles) with scoring system
+• Create lobby system for match creation and team assignment
+• Support both keyboard/mouse and gamepad input with custom mapping",@f,"HTML5,CSS3,JavaScript,Three.js,WebSocket,Web Audio API",Advanced
+
+"Todo List","Productivity","Create a responsive todo application:
+• Build modern UI with CSS Grid/Flexbox and intuitive controls
+• Implement CRUD operations with smooth animations
+• Add task categorization with color-coding and priority levels
+• Include due dates with date-picker and reminder notifications
+• Persist data with localStorage between sessions
+• Add search and filters (status, category, date range)
+• Implement drag-and-drop reordering with HTML5 Drag and Drop API
+• Ensure responsive design with appropriate breakpoints
+• Add dark/light theme toggle respecting system preferences
+• Include micro-interactions for better user experience",@f,"HTML5,CSS3,JavaScript,localStorage",Beginner
+
+"Weather Dashboard","Utility","Build a comprehensive weather dashboard:
+• Create interface showing current conditions with dynamic icons and backgrounds
+• Display 5-day forecast with expandable hourly details
+• Implement location search with autocomplete and history
+• Add geolocation for automatic user location detection
+• Include unit toggles (°C/°F) and time format options
+• Display severe weather alerts with priority highlighting
+• Show detailed meteorological data (wind, humidity, pressure, UV index)
+• Include sunrise/sunset times with visual indicators
+• Create responsive Grid layout for all device sizes
+• Implement proper error handling for API failures",@f,"HTML5,CSS3,JavaScript,REST API,OpenWeatherMap API",Intermediate
+
+"Scientific Calculator","Utility","Create a comprehensive scientific calculator:
+• Implement arithmetic operations with proper order of operations
+• Add scientific functions (trigonometric, logarithmic, exponential, statistical)
+• Include degree/radian toggle and constants (π, e, φ)
+• Implement memory operations (M+, M-, MR, MC) with indicators
+• Add calculation history with save/clear options
+• Support keyboard input with appropriate mapping
+• Implement error handling for invalid operations
+• Create responsive design with layout transformation
+• Add theme options (classic, modern, high contrast)
+• Include copy/paste functionality for results",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Markdown Notes","Productivity","Build a feature-rich markdown notes application:
+• Create split-screen interface with editor and live preview
+• Support full markdown syntax with tables and code highlighting
+• Implement LaTeX equation rendering
+• Add hierarchical organization with categories and tags
+• Include powerful search with content indexing
+• Use localStorage with import/export functionality
+• Support multiple export formats (PDF, HTML, markdown)
+• Add customizable themes with syntax highlighting options
+• Create responsive layout with collapsible panels
+• Implement keyboard shortcuts and auto-save functionality",@f,"HTML5,CSS3,JavaScript,localStorage,Markdown-it,KaTeX/MathJax",Advanced
+
+"Pomodoro Timer","Productivity","Create a pomodoro timer app:
+• Design elegant UI with animated circular progress indicator
+• Allow customization of work/break intervals
+• Integrate task list with pomodoro sessions
+• Add configurable notifications with sound options
+• Implement productivity statistics and visualizations
+• Use localStorage for settings and history persistence
+• Make installable as PWA with offline support
+• Add keyboard shortcuts for timer control
+• Include multiple theme options
+• Implement focus mode to block distractions",@f,"HTML5,CSS3,JavaScript,localStorage,Service Workers",Beginner
+
+"Interactive Quiz","Education","Develop a comprehensive quiz application:
+• Create engaging UI with smooth transitions
+• Support multiple question types (multiple choice, true/false, matching)
+• Implement timers with visual countdown
+• Add scoring based on difficulty and response time
+• Show dynamic progress indicator
+• Include review mode with explanations
+• Implement leaderboard using localStorage
+• Organize questions into categories
+• Support multiple difficulty levels
+• Generate detailed performance analytics",@f,"HTML5,CSS3,JavaScript,localStorage",Intermediate
+
+"Advanced Color Picker Tool","Design","Build a professional color tool:
+• Create interface with multiple selection methods (eyedropper, wheel, sliders)
+• Implement real-time format conversion (RGB, HSL, HEX, CMYK)
+• Add color scheme generation (complementary, analogous, triadic)
+• Include favorites system with named collections
+• Implement color harmony visualization
+• Create gradient generator with multiple stop support
+• Add accessibility checker with WCAG compliance testing
+• Implement one-click code copying (CSS, SCSS, SVG)
+• Include color naming suggestions
+• Support palette export to multiple formats",@f,"HTML5,CSS3,JavaScript,Canvas API,localStorage",Advanced
+
+"Secure Password Generator","Security","Create a secure password generator:
+• Build intuitive interface with real-time preview
+• Allow customization of length and character types
+• Implement strength meter showing entropy and crack time
+• Add one-click copy with clipboard management
+• Create password vault with encrypted storage
+• Generate multiple passwords simultaneously
+• Maintain generation history with timestamps
+• Calculate entropy using standard formulas
+• Offer memorable password generation options
+• Include secure export functionality",@f,"HTML5,CSS3,JavaScript,Web Crypto API,localStorage",Intermediate
+
+"Health Metrics Calculator","Health","Build a comprehensive health metrics calculator:
+• Create accessible interface with step-by-step forms
+• Implement BMI calculation with classification scale
+• Add body fat percentage calculator with multiple methods
+• Calculate ideal weight ranges using multiple formulas
+• Implement calorie needs calculator (BMR/TDEE)
+• Include personalized health recommendations
+• Support metric and imperial units with conversion
+• Store profiles and measurement history
+• Generate interactive progress charts
+• Create exportable PDF reports",@f,"HTML5,CSS3,JavaScript,Chart.js,localStorage",Intermediate
+
+"Currency Exchange Calculator","Utility","Develop a comprehensive currency converter:
+• Create clean interface with input fields and currency selectors
+• Implement real-time exchange rates with timestamp indicators
+• Support 170+ currencies including crypto with proper formatting
+• Maintain conversion history with timestamps and rate info
+• Allow bookmarking of favorite currency pairs
+• Generate interactive historical rate charts
+• Implement offline functionality using cached rates
+• Add built-in calculator for complex conversions
+• Create rate alerts for target exchange rates
+• Include side-by-side comparison of provider rates",@f,"HTML5,CSS3,JavaScript,API",Intermediate
+
+"File Encryption Tool","Security","Create a client-side file encryption tool:
+• Build drag-and-drop interface for file selection
+• Implement AES-256-GCM encryption with PBKDF2 key derivation
+• Add support for encrypting multiple files with batch processing
+• Include password strength enforcement with entropy calculation
+• Generate downloadable encrypted files with custom extension
+• Create decryption interface with password verification
+• Implement secure memory handling with automatic clearing
+• Add detailed logs of encryption operations
+• Include export/import of encryption keys with security warnings
+• Support for large files using streaming encryption",@f,"HTML5,CSS3,JavaScript",Advanced
+
+"Code Snippet Manager","Developer Tool","Build a developer-focused code snippet manager:
+• Create IDE-like interface with syntax highlighting for 30+ languages
+• Implement tagging and categorization for organizing snippets
+• Add powerful search with regex and filtering by language/tags
+• Include code editing with line numbers and bracket matching
+• Support public/private visibility settings for snippets
+• Implement export/import in JSON and Gist formats
+• Add keyboard shortcuts for common operations
+• Create responsive design for all devices
+• Include automatic saving with version history
+• Add copy-to-clipboard with syntax formatting preservation",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Budget Tracker","Finance","Develop a comprehensive budget tracking application:
+• Create intuitive dashboard showing income, expenses, and savings
+• Implement transaction management with categories and tags
+• Add interactive charts for expense analysis
+• Include budget goal setting with progress tracking
+• Support multiple accounts and transfers between accounts
+• Implement receipt scanning and storage
+• Add export functionality for reports in CSV and PDF formats
+• Create responsive design with mobile-first approach
+• Include data backup and restore functionality
+• Add forecasting features to predict future financial status",@f,"HTML5,CSS3,JavaScript",Advanced
+
+"Recipe Finder","Food","Create a recipe finder application:
+• Build visually appealing interface with food photography
+• Implement advanced search with filtering by ingredients, cuisine, diet
+• Add user ratings and reviews with star system
+• Include detailed nutritional information with visual indicators
+• Support recipe saving and categorization into collections
+• Implement meal planning calendar with drag-and-drop functionality
+• Add automatic serving size adjustment with quantity recalculation
+• Include cooking mode with step-by-step instructions and timers
+• Support offline access to saved recipes
+• Add social sharing functionality for favorite recipes",@f,"HTML5,CSS3,JavaScript,API",Intermediate
+
+"Kanban Board","Productivity","Build a Kanban project management board:
+• Create flexible board layout with customizable columns
+• Implement drag-and-drop card movement between columns
+• Add card creation with rich text formatting and due dates
+• Include user assignment and filtering by assignee
+• Implement card comments and activity history
+• Add board customization with column reordering and color themes
+• Support multiple boards with quick switching
+• Implement data persistence using localStorage
+• Create responsive design for all devices
+• Add keyboard shortcuts for common actions",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Music Player","Media","Develop a web-based music player:
+• Create modern interface with album art display and visualizations
+• Implement playlist management with drag-and-drop reordering
+• Add audio controls including play/pause, skip, seek, volume
+• Include shuffle and repeat modes with visual indicators
+• Support multiple audio formats with fallbacks
+• Implement 10-band equalizer with presets
+• Add metadata extraction and display from audio files
+• Create responsive design for all devices
+• Include keyboard shortcuts for playback control
+• Support background playback with media session API integration",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Drawing App","Productivity","Create an interactive drawing application:
+• Build clean interface with intuitive tool selection
+• Implement multiple drawing tools (brush, pencil, shapes, text, eraser)
+• Add color selection with recent colors and color picker
+• Include layer support with opacity and blend mode options
+• Implement undo/redo functionality with history states
+• Add image import and export in multiple formats (PNG, JPG, SVG)
+• Support canvas resizing and rotation
+• Implement zoom and pan navigation
+• Add selection tools with move, resize, and transform capabilities
+• Include keyboard shortcuts for common actions",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Meditation Timer","Health","Build a mindfulness meditation timer:
+• Create serene, distraction-free interface with nature-inspired design
+• Implement customizable meditation sessions with prep, meditation, and rest intervals
+• Add ambient sound options (nature sounds, binaural beats, white noise)
+• Include guided meditation with customizable voice prompts
+• Implement interval bells with volume control and sound selection
+• Add session history and statistics tracking
+• Create visual breathing guides with animations
+• Support offline usage as a PWA
+• Include dark mode and multiple themes
+• Add session scheduling with reminders",@f,"HTML5,CSS3,JavaScript",Beginner
+
+"Flashcard Study System","Education","Develop a comprehensive flashcard study system:
+• Create intuitive interface for card creation and review
+• Implement spaced repetition algorithm for optimized learning
+• Add support for text, images, and audio on cards
+• Include card categorization with decks and tags
+• Implement study sessions with performance tracking
+• Add self-assessment with confidence levels
+• Create statistics dashboard showing learning progress
+• Support import/export of card decks in standard formats
+• Implement keyboard shortcuts for efficient review
+• Add dark mode and customizable themes",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Habit Tracker","Health","Create a habit tracking application:
+• Build clean interface showing daily, weekly, and monthly views
+• Implement habit creation with frequency, reminders, and goals
+• Add streak tracking with visual indicators and milestone celebrations
+• Include detailed statistics and progress graphs
+• Support habit categories and tags for organization
+• Implement calendar integration for scheduling
+• Add data visualization showing patterns and trends
+• Create responsive design for all devices
+• Include data export and backup functionality
+• Add gamification elements with achievements and rewards",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Text Analyzer Tool","Utility","Build a comprehensive text analysis tool:
+• Create clean interface with text input area and results dashboard
+• Implement word count, character count, and reading time estimation
+• Add readability scoring using multiple algorithms
+• Include keyword density analysis with visualization
+• Implement sentiment analysis with emotional tone detection
+• Add grammar and spelling checking with suggestions
+• Include text comparison functionality for similarity detection
+• Support multiple languages with automatic detection
+• Add export functionality for analysis reports
+• Implement text formatting and cleaning tools",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Image Editor","Media","Develop a web-based image editor:
+• Create professional interface with tool panels and preview area
+• Implement basic adjustments (brightness, contrast, saturation, sharpness)
+• Add filters with customizable parameters and previews
+• Include cropping and resizing with aspect ratio controls
+• Implement text overlay with font selection and styling
+• Add shape drawing tools with fill and stroke options
+• Include layer management with blending modes
+• Support image export in multiple formats and qualities
+• Create responsive design that adapts to screen size
+• Add undo/redo functionality with history states",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Sudoku Game","Game","Create an interactive Sudoku game:
+• Build clean, accessible game board with intuitive controls
+• Implement difficulty levels with appropriate puzzle generation algorithms
+• Add hint system with multiple levels of assistance
+• Include note-taking functionality for candidate numbers
+• Implement timer with pause and resume
+• Add error checking with optional immediate feedback
+• Include game saving and loading with multiple slots
+• Create statistics tracking for wins, times, and difficulty levels
+• Add printable puzzle generation
+• Implement keyboard controls and accessibility features",@f,"HTML5,CSS3,JavaScript",Beginner
+
+"URL Shortener","Utility","Build a URL shortening service frontend:
+• Create clean interface with prominent input field
+• Implement URL validation and sanitization
+• Add QR code generation for shortened URLs
+• Include click tracking and analytics dashboard
+• Support custom alias creation for URLs
+• Implement expiration date setting for links
+• Add password protection option for sensitive URLs
+• Include copy-to-clipboard functionality with confirmation
+• Create responsive design for all devices
+• Add history of shortened URLs with search and filtering",@f,"HTML5,CSS3,JavaScript,API",Intermediate
+
+"Chess Game","Game","Develop a feature-rich chess game:
+• Create realistic chessboard with proper piece rendering
+• Implement standard chess rules with move validation
+• Add move highlighting and piece movement animation
+• Include game clock with multiple time control options
+• Implement notation recording with PGN export
+• Add game analysis with move evaluation
+• Include AI opponent with adjustable difficulty levels
+• Support online play with WebRTC or WebSocket
+• Add opening book and common patterns recognition
+• Implement tournament mode with brackets and scoring",@f,"HTML5,CSS3,JavaScript",Advanced
+
+"PDF Viewer","Utility","Create a web-based PDF viewer:
+• Build clean interface with intuitive navigation controls
+• Implement page navigation with thumbnails and outline view
+• Add text search with result highlighting
+• Include zoom and fit-to-width/height controls
+• Implement text selection and copying
+• Add annotation tools (highlights, notes, drawing)
+• Support document rotation and presentation mode
+• Include print functionality with options
+• Create responsive design that works on all devices
+• Add document properties and metadata display",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Typing Speed Test","Education","Build an interactive typing speed test:
+• Create clean interface with text display and input area
+• Implement WPM and accuracy calculation in real-time
+• Add difficulty levels with appropriate text selection
+• Include error highlighting and correction tracking
+• Implement test history with performance graphs
+• Add custom test creation with text import
+• Include virtual keyboard display showing keypresses
+• Support multiple languages and keyboard layouts
+• Create responsive design for all devices
+• Add competition mode with leaderboards",@f,"HTML5,CSS3,JavaScript",Beginner
+
+"Memory Card Game","Game","Develop a memory matching card game:
+• Create visually appealing card designs with flip animations
+• Implement difficulty levels with varying grid sizes and card counts
+• Add timer and move counter for scoring
+• Include sound effects for card flips and matches
+• Implement leaderboard with score persistence
+• Add theme selection with different card designs
+• Include multiplayer mode for competitive play
+• Create responsive layout that adapts to screen size
+• Add accessibility features for keyboard navigation
+• Implement progressive difficulty increase during gameplay",@f,"HTML5,CSS3,JavaScript",Intermediate
+
+"Network Packet Analyzer CLI","Networking","Create a command-line network packet analyzer in C:
+• Implement packet capture from network interfaces with filtering options
+• Add protocol analysis for common protocols (TCP, UDP, HTTP, DNS)
+• Include traffic statistics with bandwidth usage and connection counts
+• Implement packet decoding with detailed header information
+• Add export functionality in PCAP and CSV formats
+• Include alert system for suspicious traffic patterns
+• Implement connection tracking with state information
+• Add geolocation lookup for IP addresses
+• Include command-line arguments for all options with sensible defaults
+• Implement color-coded output for better readability",@f,"C,libpcap",Advanced
+
+"File System Indexer CLI","File Management","Build a high-performance file system indexer and search tool in Go:
+• Implement recursive directory traversal with configurable depth
+• Add file metadata extraction (size, dates, permissions)
+• Include content indexing with optional full-text search
+• Implement advanced query syntax with boolean operators and wildcards
+• Add incremental indexing for performance
+• Include export functionality in JSON and CSV formats
+• Implement search result highlighting
+• Add duplicate file detection using checksums
+• Include performance statistics and progress reporting
+• Implement concurrent processing for multi-core utilization",@f,"Go",Advanced
+
+"Memory Profiler CLI","Performance","Develop a memory profiling tool in C:
+• Implement process attachment with minimal performance impact
+• Add heap analysis with allocation tracking
+• Include memory leak detection with stack traces
+• Implement memory usage visualization with detailed statistics
+• Add custom allocator hooking for detailed tracking
+• Include report generation in multiple formats
+• Implement filtering options for noise reduction
+• Add comparison functionality between snapshots
+• Include command-line interface with interactive mode
+• Implement signal handling for clean detachment",@f,"C",Advanced
+
+"HTTP Benchmarking Tool CLI","Networking","Create a high-performance HTTP benchmarking tool in Go:
+• Implement concurrent request generation with configurable thread count
+• Add detailed statistics (latency, throughput, error rates)
+• Include support for HTTP/1.1, HTTP/2, and HTTP/3
+• Implement custom header and cookie management
+• Add request templating for dynamic content
+• Include response validation with regex and status code checking
+• Implement TLS configuration with certificate validation options
+• Add load profile configuration with ramp-up and steady-state phases
+• Include detailed reporting with percentiles and histograms
+• Implement distributed testing mode for high-load scenarios",@f,"Go",Advanced
+
+"3D Racing Game","Game","Create an exciting 3D racing game:
+• Implement realistic vehicle physics (suspension, tire friction, aerodynamics)
+• Create detailed car models with customizable paint and upgrades
+• Design multiple race tracks with varying terrain and obstacles
+• Add AI opponents with different difficulty levels and racing behaviors
+• Implement split-screen multiplayer mode for local racing
+• Include comprehensive HUD showing speed, lap times, position, and minimap
+• Create particle effects for tire smoke, engine effects, and weather
+• Add dynamic day/night cycle with realistic lighting
+• Implement race modes (time trial, championship, elimination)
+• Include replay system with multiple camera angles",@f,"HTML5,CSS3,JavaScript,Three.js",Advanced
+
+"3D Space Explorer","Game","Build an immersive 3D space exploration game:
+• Create vast universe with procedurally generated planets, stars, and nebulae
+• Implement realistic spacecraft controls with Newtonian physics
+• Add detailed planet surfaces with terrain generation and atmospheric effects
+• Create space stations and outposts for trading and missions
+• Implement resource collection and cargo management systems
+• Add alien species with unique behaviors and interactions
+• Create wormhole travel effects between star systems
+• Include detailed ship customization and upgrade system
+• Implement mining and combat mechanics with weapon effects
+• Add mission system with story elements and objectives",@f,"HTML5,CSS3,JavaScript,Three.js",Advanced
+
+"3D FPS Game","Game","Develop a first-person shooter game:
+• Create detailed weapon models with realistic animations and effects
+• Implement precise hit detection and damage systems
+• Design multiple game levels with various environments and objectives
+• Add AI enemies with pathfinding and combat behaviors
+• Create particle effects for muzzle flashes, impacts, and explosions
+• Implement multiplayer mode with team-based objectives
+• Include weapon pickup and inventory system
+• Add sound effects for weapons, footsteps, and environment
+• Create detailed scoring and statistics tracking
+• Implement replay system for kill cams and match highlights",@f,"HTML5,CSS3,JavaScript,Three.js",Advanced

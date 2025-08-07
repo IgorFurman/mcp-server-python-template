@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Prompt Research Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-button {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .nav-button:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .nav-button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .prompt-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .prompt-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            transition: transform 0.2s;
+        }
+        
+        .prompt-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .prompt-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .prompt-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+        
+        .prompt-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .prompt-service {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .prompt-date {
+            color: #666;
+        }
+        
+        .prompt-words {
+            color: #28a745;
+            font-weight: 500;
+        }
+        
+        .prompt-preview {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 1rem;
+        }
+        
+        .search-container {
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .comparison-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .comparison-result {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .similarity-score {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .similarity-high { color: #28a745; }
+        .similarity-medium { color: #ffc107; }
+        .similarity-low { color: #dc3545; }
+        
+        .category-bars {
+            margin-top: 20px;
+        }
+        
+        .category-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .category-label {
+            width: 120px;
+            font-size: 0.9rem;
+            text-transform: capitalize;
+        }
+        
+        .category-fill {
+            flex: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+        
+        .category-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        
+        .category-score {
+            width: 40px;
+            text-align: right;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            margin: 20px 0;
+            height: 400px;
+        }
+        
+        @media (max-width: 768px) {
+            .app {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav {
+                gap: 0.5rem;
+            }
+            
+            .nav-button {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // API utility functions
+        const api = {
+            async get(endpoint) {
+                const response = await fetch(`/api${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            },
+            
+            async post(endpoint, data) {
+                const response = await fetch(`/api${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            }
+        };
+
+        // Main Dashboard Component
+        function Dashboard() {
+            const [activeTab, setActiveTab] = useState('overview');
+            const [stats, setStats] = useState(null);
+            const [prompts, setPrompts] = useState([]);
+            const [analysis, setAnalysis] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = async () => {
+                try {
+                    setLoading(true);
+                    const [statsData, promptsData, analysisData] = await Promise.all([
+                        api.get('/stats'),
+                        api.get('/prompts?limit=100'),
+                        api.get('/analysis').catch(() => null)
+                    ]);
+                    
+                    setStats(statsData);
+                    setPrompts(promptsData.prompts || []);
+                    setAnalysis(analysisData);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            if (loading) return <div className="loading">Loading system prompt data...</div>;
+            if (error) return <div className="error">Error: {error}</div>;
+
+            return (
+                <div className="app">
+                    <header className="header">
+                        <h1>System Prompt Research Dashboard</h1>
+                        <p>Analyzing AI system prompts for research and educational purposes</p>
+                    </header>
+
+                    <nav className="nav">
+                        <button 
+                            className={`nav-button ${activeTab === 'overview' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('overview')}
+                        >
+                            Overview
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === 'prompts' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('prompts')}
+                        >
+                            Browse Prompts
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === 'analysis' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('analysis')}
+                        >
+                            Analysis
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === 'compare' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('compare')}
+                        >
+                            Compare
+                        </button>
+                        <button 
+                            className={`nav-button ${activeTab === 'search' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('search')}
+                        >
+                            Search
+                        </button>
+                    </nav>
+
+                    <main>
+                        {activeTab === 'overview' && <OverviewTab stats={stats} analysis={analysis} />}
+                        {activeTab === 'prompts' && <PromptsTab prompts={prompts} />}
+                        {activeTab === 'analysis' && <AnalysisTab analysis={analysis} />}
+                        {activeTab === 'compare' && <CompareTab prompts={prompts} />}
+                        {activeTab === 'search' && <SearchTab />}
+                    </main>
+                </div>
+            );
+        }
+
+        // Overview Tab Component
+        function OverviewTab({ stats, analysis }) {
+            if (!stats) return <div>No statistics available</div>;
+
+            return (
+                <div>
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-number">{stats.totalPrompts}</div>
+                            <div className="stat-label">Total Prompts</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-number">{stats.services}</div>
+                            <div className="stat-label">AI Services</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-number">{stats.models}</div>
+                            <div className="stat-label">Models</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-number">{stats.avgWords}</div>
+                            <div className="stat-label">Avg Words</div>
+                        </div>
+                    </div>
+
+                    <div className="content">
+                        <h2>Services Overview</h2>
+                        <div className="prompt-list">
+                            {stats.servicesList && stats.servicesList.map(service => (
+                                <div key={service} className="prompt-item">
+                                    <div className="prompt-header">
+                                        <div className="prompt-title">{service}</div>
+                                        <div className="prompt-service">{service}</div>
+                                    </div>
+                                    <div className="prompt-meta">
+                                        <span>Service analyzed in this collection</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {analysis && (
+                        <div className="content">
+                            <h2>Analysis Summary</h2>
+                            <p>Total prompts analyzed: <strong>{analysis.aggregate.totalPrompts}</strong></p>
+                            <p>Total words: <strong>{analysis.aggregate.totalWords.toLocaleString()}</strong></p>
+                            <p>Average words per prompt: <strong>{analysis.aggregate.avgWordsPerPrompt}</strong></p>
+                            
+                            <div className="category-bars">
+                                <h3>Category Prevalence</h3>
+                                {Object.entries(analysis.aggregate.categoryScores)
+                                    .sort((a, b) => b[1].average - a[1].average)
+                                    .slice(0, 8)
+                                    .map(([category, data]) => (
+                                    <div key={category} className="category-bar">
+                                        <div className="category-label">{category.replace('_', ' ')}</div>
+                                        <div className="category-fill">
+                                            <div 
+                                                className="category-progress" 
+                                                style={{width: `${Math.min(data.average * 20, 100)}%`}}
+                                            ></div>
+                                        </div>
+                                        <div className="category-score">{data.average.toFixed(1)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Prompts Tab Component
+        function PromptsTab({ prompts }) {
+            const [filteredPrompts, setFilteredPrompts] = useState(prompts);
+            const [serviceFilter, setServiceFilter] = useState('');
+
+            useEffect(() => {
+                let filtered = prompts;
+                if (serviceFilter) {
+                    filtered = prompts.filter(p => 
+                        p.metadata.service.toLowerCase().includes(serviceFilter.toLowerCase())
+                    );
+                }
+                setFilteredPrompts(filtered);
+            }, [prompts, serviceFilter]);
+
+            const services = [...new Set(prompts.map(p => p.metadata.service))].sort();
+
+            return (
+                <div className="content">
+                    <h2>Browse System Prompts</h2>
+                    
+                    <div className="filters">
+                        <select 
+                            className="filter-select"
+                            value={serviceFilter}
+                            onChange={(e) => setServiceFilter(e.target.value)}
+                        >
+                            <option value="">All Services</option>
+                            {services.map(service => (
+                                <option key={service} value={service}>{service}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="prompt-list">
+                        {filteredPrompts.map(prompt => (
+                            <div key={prompt.filename} className="prompt-item">
+                                <div className="prompt-header">
+                                    <div className="prompt-title">{prompt.filename}</div>
+                                    <div className="prompt-meta">
+                                        <span className="prompt-service">{prompt.metadata.service}</span>
+                                        {prompt.metadata.date && (
+                                            <span className="prompt-date">
+                                                {new Date(prompt.metadata.date).toDateString()}
+                                            </span>
+                                        )}
+                                        <span className="prompt-words">{prompt.wordCount} words</span>
+                                    </div>
+                                </div>
+                                {prompt.systemPrompt && (
+                                    <div className="prompt-preview">
+                                        {prompt.systemPrompt.substring(0, 300)}
+                                        {prompt.systemPrompt.length > 300 && '...'}
+                                    </div>
+                                )}
+                                {prompt.source && (
+                                    <div style={{marginTop: '10px', fontSize: '0.9rem', color: '#666'}}>
+                                        Source: <a href={prompt.source} target="_blank" rel="noopener">{prompt.source}</a>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Analysis Tab Component
+        function AnalysisTab({ analysis }) {
+            if (!analysis) {
+                return (
+                    <div className="content">
+                        <h2>Analysis Results</h2>
+                        <p>No analysis data available. Please ensure the analysis has been run.</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <div className="content">
+                        <h2>Aggregate Analysis</h2>
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-number">{analysis.aggregate.totalPrompts}</div>
+                                <div className="stat-label">Analyzed Prompts</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-number">{analysis.aggregate.totalWords.toLocaleString()}</div>
+                                <div className="stat-label">Total Words</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-number">{analysis.aggregate.avgWordsPerPrompt}</div>
+                                <div className="stat-label">Avg Words/Prompt</div>
+                            </div>
+                        </div>
+
+                        <div className="category-bars">
+                            <h3>Content Categories</h3>
+                            <p>Shows how frequently different types of content appear across all prompts:</p>
+                            {Object.entries(analysis.aggregate.categoryScores)
+                                .sort((a, b) => b[1].average - a[1].average)
+                                .map(([category, data]) => (
+                                <div key={category} className="category-bar">
+                                    <div className="category-label">{category.replace('_', ' ')}</div>
+                                    <div className="category-fill">
+                                        <div 
+                                            className="category-progress" 
+                                            style={{width: `${Math.min(data.average * 20, 100)}%`}}
+                                        ></div>
+                                    </div>
+                                    <div className="category-score">{data.average.toFixed(1)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="content">
+                        <h2>Service Breakdown</h2>
+                        <div className="prompt-list">
+                            {Object.entries(analysis.aggregate.serviceBreakdown).map(([service, data]) => (
+                                <div key={service} className="prompt-item">
+                                    <div className="prompt-header">
+                                        <div className="prompt-title">{service}</div>
+                                        <div className="prompt-meta">
+                                            <span className="prompt-words">{data.count} prompts</span>
+                                            <span className="prompt-date">{Math.round(data.totalWords / data.count)} avg words</span>
+                                        </div>
+                                    </div>
+                                    <div style={{marginTop: '10px'}}>
+                                        <strong>Top categories:</strong>
+                                        {Object.entries(data.categories)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .slice(0, 3)
+                                            .map(([cat, score]) => (
+                                                <span key={cat} style={{
+                                                    marginLeft: '10px',
+                                                    padding: '2px 6px',
+                                                    background: '#e9ecef',
+                                                    borderRadius: '4px',
+                                                    fontSize: '0.8rem'
+                                                }}>
+                                                    {cat.replace('_', ' ')}: {score.toFixed(1)}
+                                                </span>
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {analysis.patterns && (
+                        <div className="content">
+                            <h2>Common Patterns</h2>
+                            
+                            {analysis.patterns.commonPhrases && analysis.patterns.commonPhrases.length > 0 && (
+                                <div>
+                                    <h3>Most Common Phrases</h3>
+                                    <div className="prompt-list">
+                                        {analysis.patterns.commonPhrases.slice(0, 10).map(([phrase, count]) => (
+                                            <div key={phrase} className="prompt-item">
+                                                <div className="prompt-header">
+                                                    <div className="prompt-title">"{phrase}"</div>
+                                                    <div className="prompt-words">Found in {count} prompts</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {analysis.patterns.commonDirectives && analysis.patterns.commonDirectives.length > 0 && (
+                                <div style={{marginTop: '30px'}}>
+                                    <h3>Common Directives</h3>
+                                    <div className="prompt-list">
+                                        {analysis.patterns.commonDirectives.slice(0, 5).map(([directive, count]) => (
+                                            <div key={directive} className="prompt-item">
+                                                <div className="prompt-preview">"{directive}"</div>
+                                                <div style={{marginTop: '10px', color: '#666', fontSize: '0.9rem'}}>
+                                                    Found in {count} prompts
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Compare Tab Component
+        function CompareTab({ prompts }) {
+            const [promptA, setPromptA] = useState('');
+            const [promptB, setPromptB] = useState('');
+            const [comparison, setComparison] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            const handleCompare = async () => {
+                if (!promptA || !promptB) return;
+                
+                setLoading(true);
+                try {
+                    const result = await api.post('/compare', {
+                        filenameA: promptA,
+                        filenameB: promptB
+                    });
+                    setComparison(result);
+                } catch (error) {
+                    alert('Comparison failed: ' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const getSimilarityClass = (score) => {
+                if (score > 0.7) return 'similarity-high';
+                if (score > 0.4) return 'similarity-medium';
+                return 'similarity-low';
+            };
+
+            return (
+                <div className="content">
+                    <h2>Compare System Prompts</h2>
+                    
+                    <div className="comparison-container">
+                        <div>
+                            <label>First Prompt:</label>
+                            <select 
+                                className="comparison-select"
+                                value={promptA}
+                                onChange={(e) => setPromptA(e.target.value)}
+                            >
+                                <option value="">Select a prompt...</option>
+                                {prompts.map(prompt => (
+                                    <option key={prompt.filename} value={prompt.filename}>
+                                        {prompt.filename} ({prompt.metadata.service})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>Second Prompt:</label>
+                            <select 
+                                className="comparison-select"
+                                value={promptB}
+                                onChange={(e) => setPromptB(e.target.value)}
+                            >
+                                <option value="">Select a prompt...</option>
+                                {prompts.map(prompt => (
+                                    <option key={prompt.filename} value={prompt.filename}>
+                                        {prompt.filename} ({prompt.metadata.service})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button 
+                        className="nav-button" 
+                        onClick={handleCompare}
+                        disabled={!promptA || !promptB || loading}
+                        style={{marginTop: '20px'}}
+                    >
+                        {loading ? 'Comparing...' : 'Compare Prompts'}
+                    </button>
+
+                    {comparison && (
+                        <div className="comparison-result">
+                            <h3>Comparison Results</h3>
+                            
+                            <div className={`similarity-score ${getSimilarityClass(comparison.similarity.overall)}`}>
+                                {(comparison.similarity.overall * 100).toFixed(1)}% Similar
+                            </div>
+                            
+                            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px'}}>
+                                <div>
+                                    <strong>Jaccard Similarity:</strong><br/>
+                                    {(comparison.similarity.jaccard * 100).toFixed(1)}%
+                                </div>
+                                <div>
+                                    <strong>Cosine Similarity:</strong><br/>
+                                    {(comparison.similarity.cosine * 100).toFixed(1)}%
+                                </div>
+                                <div>
+                                    <strong>Text Similarity:</strong><br/>
+                                    {(comparison.similarity.levenshtein * 100).toFixed(1)}%
+                                </div>
+                            </div>
+
+                            <div style={{marginBottom: '20px'}}>
+                                <strong>Length Comparison:</strong><br/>
+                                Prompt A: {comparison.lengthComparison.wordCountA} words<br/>
+                                Prompt B: {comparison.lengthComparison.wordCountB} words<br/>
+                                Difference: {comparison.lengthComparison.difference} words 
+                                ({comparison.lengthComparison.percentChange > 0 ? '+' : ''}{comparison.lengthComparison.percentChange}%)
+                            </div>
+
+                            {comparison.contentDifferences.themes.common.length > 0 && (
+                                <div style={{marginBottom: '20px'}}>
+                                    <strong>Common Themes:</strong><br/>
+                                    {comparison.contentDifferences.themes.common.join(', ')}
+                                </div>
+                            )}
+
+                            {comparison.contentDifferences.topSimilarSentences.length > 0 && (
+                                <div>
+                                    <strong>Most Similar Sentences:</strong>
+                                    {comparison.contentDifferences.topSimilarSentences.map((pair, index) => (
+                                        <div key={index} style={{margin: '10px 0', padding: '10px', background: '#f8f9fa', borderRadius: '4px'}}>
+                                            <div style={{marginBottom: '5px'}}>
+                                                <strong>Similarity: {(pair.similarity * 100).toFixed(1)}%</strong>
+                                            </div>
+                                            <div style={{marginBottom: '5px'}}>A: {pair.sentenceA}</div>
+                                            <div>B: {pair.sentenceB}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Search Tab Component
+        function SearchTab() {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            const handleSearch = async () => {
+                if (!query.trim()) return;
+                
+                setLoading(true);
+                try {
+                    const searchResults = await api.get(`/search?q=${encodeURIComponent(query)}`);
+                    setResults(searchResults.results || []);
+                } catch (error) {
+                    alert('Search failed: ' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            };
+
+            return (
+                <div className="content">
+                    <h2>Search System Prompts</h2>
+                    
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Search prompts by content, service, or filename..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                        />
+                        <button 
+                            className="nav-button" 
+                            onClick={handleSearch}
+                            disabled={!query.trim() || loading}
+                            style={{marginTop: '10px'}}
+                        >
+                            {loading ? 'Searching...' : 'Search'}
+                        </button>
+                    </div>
+
+                    {results.length > 0 && (
+                        <div>
+                            <h3>Search Results ({results.length} found)</h3>
+                            <div className="prompt-list">
+                                {results.map(prompt => (
+                                    <div key={prompt.filename} className="prompt-item">
+                                        <div className="prompt-header">
+                                            <div className="prompt-title">{prompt.filename}</div>
+                                            <div className="prompt-meta">
+                                                <span className="prompt-service">{prompt.metadata.service}</span>
+                                                {prompt.metadata.date && (
+                                                    <span className="prompt-date">
+                                                        {new Date(prompt.metadata.date).toDateString()}
+                                                    </span>
+                                                )}
+                                                <span className="prompt-words">{prompt.wordCount} words</span>
+                                            </div>
+                                        </div>
+                                        {prompt.systemPrompt && (
+                                            <div className="prompt-preview">
+                                                {prompt.systemPrompt.substring(0, 400)}
+                                                {prompt.systemPrompt.length > 400 && '...'}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {query && results.length === 0 && !loading && (
+                        <div style={{textAlign: 'center', padding: '2rem', color: '#666'}}>
+                            No results found for "{query}"
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Render the main application
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

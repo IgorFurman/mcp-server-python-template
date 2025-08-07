@@ -1,0 +1,34 @@
+{
+  "name": "awesome-chatgpt-prompts-supabase",
+  "version": "1.0.0",
+  "description": "Supabase integration for awesome ChatGPT prompts",
+  "type": "module",
+  "main": "supabase/client.js",
+  "scripts": {
+    "sync": "node supabase/sync-csv-to-supabase.js",
+    "sync:dry-run": "node supabase/sync-csv-to-supabase.js --dry-run",
+    "sync:prompts": "node supabase/sync-csv-to-supabase.js --file=prompts.csv",
+    "sync:vibe": "node supabase/sync-csv-to-supabase.js --file=vibeprompts.csv",
+    "sync:system": "node supabase/sync-csv-to-supabase.js --file=base",
+    "test:connection": "node -e \"import('./supabase/client.js').then(({supabase}) => supabase.from('prompts').select('count').then(console.log))\""
+  },
+  "keywords": [
+    "chatgpt",
+    "prompts",
+    "supabase",
+    "ai",
+    "database"
+  ],
+  "author": "Awesome ChatGPT Prompts Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.53.0",
+    "csv-parser": "^3.2.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

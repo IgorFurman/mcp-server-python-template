@@ -1,0 +1,399 @@
+# Supabase Integration for Awesome ChatGPT Prompts
+
+This directory contains a complete Supabase integration for the awesome-chatgpt-prompts repository, providing a scalable database backend with authentication, real-time features, and comprehensive API management.
+
+## 🚀 Quick Start
+
+### 1. Setup Supabase Project
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Copy your project URL and API keys
+3. Set up environment variables:
+
+```bash
+cp .env.example .env
+# Edit .env with your Supabase credentials
+```
+
+### 2. Initialize Database
+
+Run the SQL files in your Supabase SQL editor:
+
+1. First run `schema.sql` to create tables and basic structure
+2. Then run `functions.sql` to add utility functions
+
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Sync Your Data
+
+```bash
+# Sync all CSV files to Supabase
+npm run sync
+
+# Or sync individual files
+npm run sync:prompts    # prompts.csv
+npm run sync:vibe      # vibeprompts.csv
+npm run sync:system    # base/ directory
+```
+
+### 5. Test Connection
+
+```bash
+npm run test:connection
+```
+
+## 📊 Database Schema
+
+### Core Tables
+
+#### `prompts`
+
+Main prompts from prompts.csv with enhanced metadata:
+
+- Full-text search capabilities
+- User favorites and collections
+- View/like tracking
+- Category and tag systems
+
+#### `system_prompts`
+
+AI system prompts from the base/ directory:
+
+- Service and model tracking
+- Version history
+- Source verification
+
+#### `app_prompts`
+
+Application prompts from vibeprompts.csv:
+
+- Tech stack categorization
+- Difficulty levels
+- Feature tracking
+
+#### `user_favorites`
+
+User's favorite prompts with collections support
+
+#### `collections`
+
+User-created prompt collections (public/private)
+
+### Features
+
+- **Full-text search** across all content types
+- **Real-time subscriptions** for live updates
+- **Row Level Security (RLS)** for data protection
+- **Automatic timestamps** and search indexing
+- **User authentication** with multiple providers
+- **Admin functions** for analytics and management
+
+## 🔧 API Usage
+
+### Import the Client
+
+```javascript
+import { supabase, promptsAPI, authManager } from "./supabase/client.js";
+```
+
+### Basic Operations
+
+```javascript
+// Get all prompts with filtering
+const prompts = await promptsAPI.getAll({
+  category: "developer",
+  search: "javascript",
+  limit: 20,
+});
+
+// Search across all content types
+const results = await promptsAPI.search("react hooks");
+
+// Get trending prompts
+const trending = await promptsAPI.getTrending(10);
+
+// Create a new prompt (requires authentication)
+const newPrompt = await promptsAPI.create({
+  act: "React Developer",
+  prompt: "You are an expert React developer...",
+  category: "developer",
+  tags: ["react", "javascript", "frontend"],
+});
+```
+
+### Authentication
+
+```javascript
+// Sign up
+const result = await authForms.signUp({
+  email: "user@example.com",
+  password: "securepassword",
+  fullName: "John Doe",
+});
+
+// Sign in
+const result = await authForms.signIn({
+  email: "user@example.com",
+  password: "securepassword",
+});
+
+// OAuth sign in
+await authForms.signInWithProvider("github");
+
+// Listen to auth changes
+authManager.subscribe((authState) => {
+  console.log("Auth state:", authState);
+});
+```
+
+### Real-time Subscriptions
+
+```javascript
+// Subscribe to new prompts
+const subscription = db.subscribe("prompts", (payload) => {
+  console.log("New prompt:", payload.new);
+});
+
+// Unsubscribe when done
+db.unsubscribe(subscription);
+```
+
+## 📁 File Structure
+
+```
+supabase/
+├── schema.sql              # Database schema and tables
+├── functions.sql           # Utility functions and stored procedures
+├── client.js              # Supabase client configuration
+├── prompts.js             # CRUD operations for prompts
+├── auth.js                # Authentication utilities
+├── sync-csv-to-supabase.js # Data synchronization script
+└── README.md              # This documentation
+```
+
+## 🔄 Data Synchronization
+
+The sync script handles importing CSV data and markdown files:
+
+### Available Commands
+
+```bash
+# Full sync (all files)
+npm run sync
+
+# Dry run (preview changes)
+npm run sync:dry-run
+
+# Sync specific files
+npm run sync:prompts    # prompts.csv → prompts table
+npm run sync:vibe      # vibeprompts.csv → app_prompts table
+npm run sync:system    # base/*.md → system_prompts table
+
+# Custom batch size
+node supabase/sync-csv-to-supabase.js --batch-size=50
+```
+
+### Data Transformations
+
+- **prompts.csv**: Cleaned and categorized with developer detection
+- **vibeprompts.csv**: Transformed to app_prompts with tech stack parsing
+- **base/\*.md**: Parsed for service, model, date, and system prompt content
+
+## 🔍 Search Features
+
+### Full-Text Search
+
+```javascript
+// Search prompts with ranking
+const results = await promptsAPI.search("machine learning python");
+
+// Search across all content types
+const allResults = await supabase.rpc("search_all_prompts", {
+  search_query: "javascript react",
+  limit_count: 50,
+});
+```
+
+### Filtering and Sorting
+
+```javascript
+// Advanced filtering
+const devPrompts = await promptsAPI.getAll({
+  category: "developer",
+  forDevs: true,
+  tags: ["javascript", "react"],
+  sortBy: "likes",
+  sortOrder: "desc",
+});
+
+// Get popular content
+const popular = await promptsAPI.getPopular(20, "week");
+const trending = await promptsAPI.getTrending(20);
+```
+
+## 👥 User Management
+
+### User Profiles
+
+```javascript
+// Get user profile info
+const profile = authUtils.formatUserProfile();
+
+// Get user's activity
+const activity = await supabase.rpc("get_user_activity", {
+  user_id: user.id,
+});
+
+// Get user's prompts
+const userPrompts = await promptsAPI.getUserPrompts(user.id);
+
+// Get user's favorites
+const favorites = await promptsAPI.getFavorites(user.id);
+```
+
+### Collections
+
+```javascript
+// Create a collection
+const collection = await db
+  .from("collections")
+  .insert({
+    name: "My Favorite React Prompts",
+    description: "Collection of React-related prompts",
+    is_public: true,
+  })
+  .select()
+  .single();
+
+// Add prompts to collection
+await db.from("collection_items").insert({
+  collection_id: collection.id,
+  prompt_id: promptId,
+});
+```
+
+## 📈 Analytics
+
+### Built-in Analytics Functions
+
+```javascript
+// Get overall statistics
+const stats = await supabase.rpc("get_prompt_stats");
+
+// Popular tags
+const tags = await supabase.rpc("get_popular_tags", { limit_count: 20 });
+
+// Popular tech stacks
+const techStacks = await supabase.rpc("get_popular_techstacks", {
+  limit_count: 20,
+});
+
+// User activity summary
+const userActivity = await supabase.rpc("get_user_activity", { user_id });
+```
+
+## 🔒 Security
+
+### Row Level Security (RLS)
+
+All tables have RLS enabled with policies for:
+
+- Public read access for published content
+- User-owned content management
+- Admin access controls
+- Collection privacy settings
+
+### Authentication
+
+Supports multiple authentication methods:
+
+- Email/password
+- OAuth providers (GitHub, Google, etc.)
+- Magic links
+- Phone authentication
+
+## 🚀 Deployment
+
+### Environment Variables
+
+Required for production:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+```
+
+### Serverless Functions
+
+The client works with:
+
+- Vercel Functions
+- Netlify Functions
+- AWS Lambda
+- Cloudflare Workers
+
+## 🔧 Customization
+
+### Extending the Schema
+
+Add new fields to existing tables or create new tables in `schema.sql`
+
+### Custom Functions
+
+Add business logic in `functions.sql` for:
+
+- Custom search algorithms
+- Analytics calculations
+- Data processing
+- Automated workflows
+
+### API Extensions
+
+Extend the APIs in `prompts.js` for:
+
+- New filtering options
+- Custom sorting algorithms
+- Bulk operations
+- Advanced search features
+
+## 📚 Resources
+
+- [Supabase Documentation](https://supabase.com/docs)
+- [PostgreSQL Full-Text Search](https://www.postgresql.org/docs/current/textsearch.html)
+- [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
+- [Real-time Subscriptions](https://supabase.com/docs/guides/realtime)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Connection Errors**: Check environment variables and network access
+2. **RLS Policies**: Ensure proper authentication for protected operations
+3. **Search Issues**: Verify full-text search indexes are created
+4. **Sync Failures**: Check CSV format and data validation
+
+### Debug Mode
+
+Enable debug logging:
+
+```javascript
+import { supabase } from "./supabase/client.js";
+
+supabase.auth.debug = true;
+```
+
+## 🤝 Contributing
+
+1. Test your changes with `npm run sync:dry-run`
+2. Ensure all functions work with the test suite
+3. Update documentation for new features
+4. Follow the existing code style and patterns
+
+## 📄 License
+
+This integration follows the same MIT license as the main repository.
