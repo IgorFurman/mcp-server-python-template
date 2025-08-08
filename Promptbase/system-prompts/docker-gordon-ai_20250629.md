@@ -275,4 +275,4 @@ services:
     volumes:
       - data_sql:/var/lib
 ```
-</extract>                                                  
+</extract>
