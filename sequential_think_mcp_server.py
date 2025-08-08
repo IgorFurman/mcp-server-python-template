@@ -184,7 +184,7 @@ class EnhancedDatabaseManager:
             # Try FTS search first
             try:
                 sql = '''
-                    SELECT p.*, 
+                    SELECT p.*,
                            (p.effectiveness_score * p.quality_score * p.usage_count * 0.1) as relevance_score,
                            bm25(prompts_fts) as fts_score
                     FROM prompts p
@@ -220,9 +220,9 @@ class EnhancedDatabaseManager:
 
             # Fallback to LIKE search
             sql = '''
-                SELECT *, 
+                SELECT *,
                        (effectiveness_score * quality_score * usage_count * 0.1) as relevance_score
-                FROM prompts 
+                FROM prompts
                 WHERE (content LIKE ? OR title LIKE ? OR domain LIKE ? OR tags LIKE ?)
             '''
             like_query = f"%{query}%"
@@ -285,8 +285,8 @@ class EnhancedDatabaseManager:
             else:
                 # Insert new prompt
                 await asyncio.to_thread(conn.execute, '''
-                    INSERT INTO prompts 
-                    (hash, title, content, original_prompt, enhanced_prompt, category, 
+                    INSERT INTO prompts
+                    (hash, title, content, original_prompt, enhanced_prompt, category,
                      complexity_level, context_level, domain, effectiveness_score, quality_score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
@@ -356,14 +356,14 @@ class EnhancedAIServiceManager:
 
         enhancement_prompt = f"""
         Analyze and enhance the following prompt for maximum effectiveness:
-        
+
         Original: "{normalized_prompt}"
         Domain: {domain}
-        
+
         Provide analysis in JSON format:
         {{
             "complexity": "L1|L2|L3|L4|L5",
-            "context": "C1|C2|C3|C4|C5", 
+            "context": "C1|C2|C3|C4|C5",
             "effectiveness": 0.0-1.0,
             "quality_score": 0.0-1.0,
             "improvements": ["specific improvement 1", "improvement 2"],
@@ -676,11 +676,11 @@ async def enhance_prompt(
             system_prompt = f"""
             You are an expert prompt engineer specializing in {domain} domain.
             Enhance the prompt to achieve {complexity_level} complexity:
-            
+
             L1-L2: Simple, focused tasks (1-4 steps)
-            L3-L4: Complex analysis requiring systematic approach (5-10 steps)  
+            L3-L4: Complex analysis requiring systematic approach (5-10 steps)
             L5: Comprehensive architectural decisions (10+ steps)
-            
+
             Provide clear, structured, actionable enhancement.
             """
 
@@ -801,16 +801,16 @@ async def classify_prompt(prompt: str, detailed: bool = True) -> str:
             if models:
                 system_prompt = """
                 Analyze this prompt and classify it according to Sequential Thinking complexity:
-                
+
                 L1: Simple tasks (1-2 steps) - Basic questions, direct requests
-                L2: Moderate tasks (3-4 steps) - Simple problem-solving  
+                L2: Moderate tasks (3-4 steps) - Simple problem-solving
                 L3: Complex tasks (5-7 steps) - Multi-step analysis
                 L4: Advanced tasks (8-10 steps) - Complex problem-solving
                 L5: Expert tasks (10+ steps) - Comprehensive analysis
-                
+
                 Provide:
                 1. Complexity Level (L1-L5)
-                2. Context Level (C1-C5) 
+                2. Context Level (C1-C5)
                 3. Domain Classification
                 4. Estimated thinking steps needed
                 5. Key challenges and considerations
@@ -889,9 +889,9 @@ async def get_prompt_recommendations(
             conn.row_factory = sqlite3.Row
 
             sql = '''
-                SELECT *, 
+                SELECT *,
                        (effectiveness_score * 0.4 + quality_score * 0.4 + (usage_count * 0.01) + success_rate * 0.2) as recommendation_score
-                FROM prompts 
+                FROM prompts
                 WHERE effectiveness_score >= 0.7 AND quality_score >= 0.7
             '''
             params = []
@@ -946,7 +946,7 @@ async def check_ollama_status() -> str:
 
 To enable local AI capabilities:
 1. Install Ollama: https://ollama.ai/
-2. Start service: ollama serve  
+2. Start service: ollama serve
 3. Install model: ollama pull llama3.2:1b
 4. Verify: ollama list
 
@@ -1018,9 +1018,9 @@ async def get_database_stats() -> str:
             # Domain distribution
             cursor = await asyncio.to_thread(conn.execute, '''
                 SELECT domain, COUNT(*) as count, AVG(quality_score) as avg_quality
-                FROM prompts 
-                GROUP BY domain 
-                ORDER BY count DESC 
+                FROM prompts
+                GROUP BY domain
+                ORDER BY count DESC
                 LIMIT 8
             ''')
             domains = await asyncio.to_thread(cursor.fetchall)
@@ -1028,8 +1028,8 @@ async def get_database_stats() -> str:
             # Complexity distribution
             cursor = await asyncio.to_thread(conn.execute, '''
                 SELECT complexity_level, COUNT(*) as count, AVG(effectiveness_score) as avg_effectiveness
-                FROM prompts 
-                GROUP BY complexity_level 
+                FROM prompts
+                GROUP BY complexity_level
                 ORDER BY complexity_level
             ''')
             complexity_dist = await asyncio.to_thread(cursor.fetchall)
@@ -1041,7 +1041,7 @@ async def get_database_stats() -> str:
 📈 Overview:
 • Total Prompts: {stats['total_prompts']:,}
 • Average Quality: {stats['avg_quality']:.3f}
-• Average Effectiveness: {stats['avg_effectiveness']:.3f}  
+• Average Effectiveness: {stats['avg_effectiveness']:.3f}
 • High-Quality Prompts: {stats['high_quality']:,} ({stats['high_quality']/max(1, stats['total_prompts'])*100:.1f}%)
 • Total Usage Count: {stats['total_usage']:,}
 
@@ -1173,8 +1173,18 @@ if __name__ == "__main__":
 
                 logger.info(
                     f"🌐 Starting SSE server on http://{args.host}:{args.port}")
-                uvicorn.run(app, host=args.host, port=args.port,
-                            log_level="debug" if args.debug else "info")
+
+                # Use uvicorn server directly instead of uvicorn.run() to avoid event loop conflicts
+                import uvicorn
+                config = uvicorn.Config(
+                    app,
+                    host=args.host,
+                    port=args.port,
+                    log_level="debug" if args.debug else "info",
+                    loop="asyncio"
+                )
+                server = uvicorn.Server(config)
+                await server.serve()
 
         except KeyboardInterrupt:
             logger.info("⏹️  Shutdown requested")
@@ -1185,4 +1195,13 @@ if __name__ == "__main__":
             await cleanup_resources()
             logger.info("👋 Sequential Think MCP Server stopped")
 
-    asyncio.run(main())
+    # Handle event loop properly
+    try:
+        loop = asyncio.get_running_loop()
+        # If we're already in an event loop, create a task
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(lambda: asyncio.run(main())).result()
+    except RuntimeError:
+        # No event loop running, safe to use asyncio.run()
+        asyncio.run(main())
