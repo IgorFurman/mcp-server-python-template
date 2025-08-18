@@ -5,12 +5,14 @@ Comprehensive offline AI assistant with local LLM capabilities and sequential th
 """
 
 import asyncio
+import functools
 import json
 import logging
 import os
 import sqlite3
 import subprocess
 import traceback
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import httpx
@@ -33,16 +35,20 @@ mcp = FastMCP("sequential-think-ai")
 
 
 def error_handler(func_name: str):
-    """Decorator for consistent error handling across MCP tools"""
+    """Decorator for consistent error handling across MCP tools with unique wrapper names"""
     def decorator(func):
-        async def wrapper(*args, **kwargs):
+        @functools.wraps(func)  # Preserve original function metadata
+        async def unique_wrapper(*args, **kwargs):
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
                 logger.error(f"Error in {func_name}: {str(e)}")
                 logger.error(traceback.format_exc())
                 return f"Error: {str(e)}. Please check logs for details."
-        return wrapper
+        
+        # Give each wrapper a unique name to prevent conflicts
+        unique_wrapper.__name__ = f"wrapper_{func_name}_{uuid.uuid4().hex[:8]}"
+        return unique_wrapper
     return decorator
 
 
